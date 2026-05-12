@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ascendia IT Asset Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#0F1117; --bg2:#181B24; --bg3:#1E2230;
+      --border:rgba(255,255,255,0.07);
+      --text:#E8EAF0; --text2:#8B90A0; --text3:#555B6E;
+      --teal:#1D9E75; --teal-dim:rgba(29,158,117,0.15);
+      --red:#E24B4A; --red-dim:rgba(226,75,74,0.15);
+      --amber:#EF9F27; --amber-dim:rgba(239,159,39,0.15);
+      --blue:#378ADD; --blue-dim:rgba(55,138,221,0.15);
+      --radius:10px; --radius-lg:14px;
+    }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    .sidebar { position:fixed; top:0; left:0; width:220px; height:100vh; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:1.5rem 1rem; z-index:100; overflow-y:auto; }
+    .sidebar-logo { font-size:13px; font-weight:600; color:var(--text); margin-bottom:2rem; display:flex; align-items:center; gap:8px; }
+    .logo-icon { width:28px; height:28px; border-radius:7px; background:var(--teal); display:flex; align-items:center; justify-content:center; font-size:0px; background-image:url(logo.png); background-size:cover; background-position:center; }
+    .nav-section { font-size:10px; color:var(--text3); font-weight:500; text-transform:uppercase; letter-spacing:.08em; margin:1.25rem 0 .5rem .5rem; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:var(--radius); font-size:13px; color:var(--text2); cursor:pointer; transition:all .15s; margin-bottom:2px; }
+    .nav-item:hover { background:var(--bg3); color:var(--text); }
+    .nav-item.active { background:var(--teal-dim); color:var(--teal); }
+    .sidebar-footer { margin-top:auto; padding-top:1rem; border-top:1px solid var(--border); font-size:12px; color:var(--text3); }
+    .sidebar-footer strong { color:var(--text2); display:block; margin-bottom:2px; }
+    .main { margin-left:220px; padding:2rem; min-height:100vh; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.75rem; }
+    .page-title { font-size:20px; font-weight:500; }
+    .page-sub { font-size:13px; color:var(--text2); margin-top:2px; }
+    .topbar-right { display:flex; align-items:center; gap:10px; }
+    .btn { padding:7px 14px; border-radius:var(--radius); font-size:13px; font-weight:500; cursor:pointer; border:1px solid var(--border); background:var(--bg2); color:var(--text2); transition:all .15s; font-family:'DM Sans',sans-serif; }
+    .btn:hover { background:var(--bg3); color:var(--text); }
+    .btn-primary { background:var(--teal); border-color:var(--teal); color:#fff; }
+    .btn-primary:hover { background:#18856A; }
+    .btn-sm { padding:5px 10px; font-size:12px; }
+    .metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:1.5rem; }
+    .metric-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.1rem 1.25rem; }
+    .metric-card.alert { border-color:var(--red); background:var(--red-dim); }
+    .metric-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .metric-icon { width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+    .metric-icon.teal { background:var(--teal-dim); }
+    .metric-icon.blue { background:var(--blue-dim); }
+    .metric-icon.red  { background:var(--red-dim);  }
+    .metric-icon.amber{ background:var(--amber-dim);}
+    .metric-trend { font-size:11px; color:var(--teal); }
+    .metric-val { font-size:28px; font-weight:500; line-height:1; margin-bottom:4px; }
+    .metric-val.red { color:var(--red); }
+    .metric-label { font-size:12px; color:var(--text2); }
+    .grid3 { display:grid; grid-template-columns:2fr 1fr; gap:14px; margin-bottom:14px; }
+    .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+    .card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.25rem; }
+    .card-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+    .card-title { font-size:13px; font-weight:500; color:var(--text2); text-transform:uppercase; letter-spacing:.06em; }
+    .tbl { width:100%; border-collapse:collapse; font-size:13px; }
+    .tbl th { text-align:left; padding:8px 10px; font-size:11px; font-weight:500; color:var(--text3); text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid var(--border); }
+    .tbl td { padding:10px 10px; border-bottom:1px solid var(--border); color:var(--text); vertical-align:middle; }
+    .tbl tr:last-child td { border-bottom:none; }
+    .tbl tr:hover td { background:var(--bg3); }
+    .mono { font-family:'DM Mono',monospace; font-size:11px; color:var(--text2); }
+    .badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; padding:3px 9px; border-radius:99px; font-weight:500; }
+    .badge-high   { background:var(--red-dim);   color:var(--red);   }
+    .badge-medium { background:var(--amber-dim); color:var(--amber); }
+    .badge-low    { background:var(--teal-dim);  color:var(--teal);  }
+    .badge-unscored{ background:var(--bg3); color:var(--text3); }
+    .badge-ready  { background:var(--teal-dim);  color:var(--teal);  }
+    .badge-maint  { background:var(--red-dim);   color:var(--red);   }
+    .badge-blue   { background:var(--blue-dim);  color:var(--blue);  }
+    .avatar { width:30px; height:30px; border-radius:50%; background:var(--blue-dim); color:var(--blue); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; flex-shrink:0; }
+    .feed-item { display:flex; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+    .feed-item:last-child { border-bottom:none; }
+    .feed-dot { width:8px; height:8px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+    .feed-text { font-size:13px; color:var(--text); line-height:1.5; flex:1; }
+    .feed-time { font-size:11px; color:var(--text3); white-space:nowrap; }
+    .health-bar-bg { background:var(--bg3); border-radius:99px; height:6px; flex:1; overflow:hidden; }
+    .health-bar-fill { height:6px; border-radius:99px; transition:width .3s; }
+    .qr-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+    .qr-asset-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.25rem; display:flex; flex-direction:column; align-items:center; gap:10px; transition:border-color .15s; }
+    .qr-asset-card:hover { border-color:var(--teal); }
+    .qr-code-box { background:#fff; border-radius:8px; padding:8px; }
+    .qr-input { width:100%; padding:10px 14px; border-radius:var(--radius); border:1px solid var(--border); background:var(--bg3); color:var(--text); font-family:'DM Mono',monospace; font-size:14px;  }
+    .qr-input:focus { outline:none; border-color:var(--teal); }
+    .result-row { display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--border); font-size:13px; }
+    .result-row:last-child { border-bottom:none; }
+    .spinner { display:inline-block; width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--teal); border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .gate-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; }
+    .gate-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; width:420px; }
+    .gate-title { font-size:18px; font-weight:500; margin-bottom:.5rem; }
+    .gate-sub { font-size:13px; color:var(--text2); margin-bottom:1.5rem; line-height:1.6; }
+    .gate-input { width:100%; padding:10px 14px; border-radius:var(--radius); border:1px solid var(--border); background:var(--bg3); color:var(--text); font-family:'DM Mono',monospace; font-size:12px; margin-bottom:12px; }
+    .gate-input:focus { outline:none; border-color:var(--teal); }
+    @media print {
+      .sidebar,.topbar,.no-print { display:none!important; }
+      .main { margin-left:0; padding:0; }
+      .qr-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+      .qr-asset-card { break-inside:avoid; border:1px solid #ccc!important; background:#fff!important; color:#000!important; }
+    }
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:var(--bg); }
+    ::-webkit-scrollbar-thumb { background:var(--bg3); border-radius:99px; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+const SNIPEIT_URL = 'http://localhost:8888';
+
+const apiFetch = async (endpoint) => {
+  const token = localStorage.getItem('snipeit_token') || '';
+  const r = await fetch(`${SNIPEIT_URL}/api/v1/${endpoint}`, {
+    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+  });
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+};
+
+const initials = n => (n||'?').split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
+function Spinner() { return <span className="spinner"></span>; }
+
+function AiBadge({ level }) {
+  const map = { High:'badge-high', Medium:'badge-medium', Low:'badge-low', Unscored:'badge-unscored' };
+  const dot = { High:'🔴', Medium:'🟡', Low:'🟢', Unscored:'⚪' };
+  const l = level||'Unscored';
+  return <span className={`badge ${map[l]||'badge-unscored'}`}>{dot[l]||'⚪'} {l}</span>;
+}
+
+function StatusBadge({ status }) {
+  const s = status||'—';
+  const cls = s.includes('Maintenance')?'badge-maint':s.includes('Ready')?'badge-ready':'badge-blue';
+  return <span className={`badge ${cls}`}>{s}</span>;
+}
+
+function HealthBar({ score }) {
+  const color = score < 40 ? '#E24B4A' : score < 65 ? '#EF9F27' : '#1D9E75';
+  return (
+    <div style={{display:'flex',alignItems:'center',gap:8}}>
+      <div className="health-bar-bg">
+        <div className="health-bar-fill" style={{width:`${score}%`, background:color}}></div>
+      </div>
+      <span style={{fontSize:11,color,fontWeight:500,minWidth:32}}>{Math.round(score)}%</span>
+    </div>
+  );
+}
+
+function TokenGate({ onSave }) {
+  const [t, setT] = useState('');
+  const [err, setErr] = useState('');
+  const [testing, setTesting] = useState(false);
+  const test = async () => {
+    setTesting(true); setErr('');
+    try {
+      localStorage.setItem('snipeit_token', t);
+      const r = await apiFetch('users/me');
+      if (r.username) { onSave(t); }
+      else { setErr('Connected but could not verify user.'); }
+    } catch(e) {
+      setErr('Could not connect. Is the proxy running? (python3 proxy.py)');
+      localStorage.removeItem('snipeit_token');
+    }
+    setTesting(false);
+  };
+  return (
+    <div className="gate-wrap">
+      <div className="gate-card">
+        <div style={{fontSize:28,marginBottom:12}}>🏛️</div>
+        <div className="gate-title">Ascendia AMS</div>
+        <div className="gate-sub">
+          Make sure the proxy is running first:<br/>
+          <code style={{background:'var(--bg3)',padding:'2px 6px',borderRadius:4,fontSize:11}}>python3 proxy.py</code><br/><br/>
+          Then enter any text below to connect.
+        </div>
+        <input className="gate-input" type="password" placeholder="Enter any text to connect..."
+          value={t} onChange={e=>setT(e.target.value)} onKeyDown={e=>e.key==='Enter'&&test()} />
+        {err && <div style={{fontSize:12,color:'var(--red)',marginBottom:10}}>{err}</div>}
+        <button className="btn btn-primary" style={{width:'100%'}} onClick={test} disabled={!t||testing}>
+          {testing ? <Spinner/> : 'Connect to Snipe-IT →'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function getAiScore(asset) {
+  const cf = asset.custom_fields || {};
+  return cf['AI Priority Score']?.value || 'Unscored';
+}
+
+// Simulated telemetry data (matches InfluxDB)
+const TELEMETRY = {
+  'AAI-2026-00001': { health: 9,  battery: 8,   cpu: 94, status: 'critical' },
+  'AAI-2026-00002': { health: 66, battery: 81,  cpu: 32, status: 'healthy'  },
+  'AAI-2026-00003': { health: 66, battery: 65,  cpu: 19, status: 'healthy'  },
+  'AAI-2026-00004': { health: 81, battery: 100, cpu: 30, status: 'healthy'  },
+  'AAI-2026-00005': { health: 77, battery: 100, cpu: 32, status: 'healthy'  },
+  'AAI-2026-00006': { health: 78, battery: 85,  cpu: 15, status: 'healthy'  },
+  'AAI-2026-00007': { health: 68, battery: 80,  cpu: 34, status: 'healthy'  },
+  'AAI-2026-00008': { health: 87, battery: 100, cpu: 12, status: 'healthy'  },
+  'AAI-2026-00009': { health: 81, battery: 100, cpu: 24, status: 'healthy'  },
+};
+
+function Dashboard({ assets, users }) {
+  const catRef = useRef(null); const poRef = useRef(null); const healthRef = useRef(null);
+  const catInst = useRef(null); const poInst = useRef(null); const healthInst = useRef(null);
+
+  const highCount  = assets.filter(a => getAiScore(a) === 'High').length;
+  const totalValue = assets.reduce((s,a) => s+(parseFloat(a.purchase_cost)||0), 0);
+  const criticalDevices = Object.values(TELEMETRY).filter(t => t.status === 'critical').length;
+
+  const cats = {};
+  assets.forEach(a => { const c = a.category?.name||'Other'; cats[c]=(cats[c]||0)+1; });
+
+  const poMap = {};
+  assets.forEach(a => {
+    const cf = a.custom_fields || {};
+    const poField = Object.values(cf).find(f => f?.field?.toLowerCase().includes('po'));
+    const po = (poField?.value||'').trim();
+    if (po) { poMap[po] = (poMap[po]||0) + (parseFloat(a.purchase_cost)||0); }
+  });
+  const poLabels = Object.keys(poMap).sort();
+  const poVals   = poLabels.map(k => Math.round(poMap[k]));
+
+  useEffect(() => {
+    if (!catRef.current || !Object.keys(cats).length) return;
+    if (catInst.current) catInst.current.destroy();
+    catInst.current = new Chart(catRef.current, {
+      type:'bar',
+      data:{ labels:Object.keys(cats), datasets:[{ data:Object.values(cats), backgroundColor:['#378ADD','#1D9E75','#EF9F27','#E24B4A'], borderRadius:5, borderSkipped:false }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ y:{beginAtZero:true,ticks:{stepSize:1,color:'#555B6E'},grid:{color:'rgba(255,255,255,0.05)'}}, x:{ticks:{color:'#555B6E'},grid:{display:false}} } }
+    });
+  }, [JSON.stringify(cats)]);
+
+  useEffect(() => {
+    if (!poRef.current || !poLabels.length) return;
+    if (poInst.current) poInst.current.destroy();
+    poInst.current = new Chart(poRef.current, {
+      type:'bar', indexAxis:'y',
+      data:{ labels:poLabels, datasets:[{ data:poVals, backgroundColor:['#378ADD','#1D9E75','#EF9F27'], borderRadius:5, borderSkipped:false }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{
+          x:{ beginAtZero:true, ticks:{color:'#555B6E', callback:v=>v>=1000?'₱'+Math.round(v/1000)+'K':'₱'+v}, grid:{color:'rgba(255,255,255,0.05)'} },
+          y:{ ticks:{color:'#555B6E',font:{family:'DM Mono',size:11}}, grid:{display:false} }
+        }
+      }
+    });
+  }, [JSON.stringify(poLabels), JSON.stringify(poVals)]);
+
+  useEffect(() => {
+    if (!healthRef.current) return;
+    if (healthInst.current) healthInst.current.destroy();
+    const tags    = Object.keys(TELEMETRY);
+    const scores  = tags.map(t => TELEMETRY[t].health);
+    const colors  = scores.map(s => s < 40 ? '#E24B4A' : s < 65 ? '#EF9F27' : '#1D9E75');
+    healthInst.current = new Chart(healthRef.current, {
+      type:'bar',
+      data:{ labels:tags, datasets:[{ data:scores, backgroundColor:colors, borderRadius:4, borderSkipped:false }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{
+          y:{beginAtZero:true,max:100,ticks:{color:'#555B6E',callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.05)'}},
+          x:{ticks:{color:'#555B6E',font:{family:'DM Mono',size:9},maxRotation:45},grid:{display:false}}
+        }
+      }
+    });
+  }, []);
+
+  return (
+    <>
+      <div className="metrics">
+        <div className="metric-card">
+          <div className="metric-top"><div className="metric-icon teal">📦</div><span className="metric-trend">live</span></div>
+          <div className="metric-val">{assets.length}</div>
+          <div className="metric-label">Total assets</div>
+        </div>
+        <div className="metric-card">
+          <div className="metric-top"><div className="metric-icon blue">👥</div></div>
+          <div className="metric-val">{users.length}</div>
+          <div className="metric-label">Staff synced</div>
+        </div>
+        <div className={`metric-card ${highCount>0?'alert':''}`}>
+          <div className="metric-top"><div className="metric-icon red">⚠️</div></div>
+          <div className={`metric-val ${highCount>0?'red':''}`}>{highCount}</div>
+          <div className="metric-label">High priority (AI)</div>
+        </div>
+        <div className="metric-card">
+          <div className="metric-top"><div className="metric-icon amber">💰</div></div>
+          <div className="metric-val">₱{totalValue>=1000?Math.round(totalValue/1000)+'K':Math.round(totalValue)}</div>
+          <div className="metric-label">Inventory value</div>
+        </div>
+      </div>
+
+      <div className="grid3" style={{marginBottom:14}}>
+        <div className="card">
+          <div className="card-head"><span className="card-title">Assets</span></div>
+          <table className="tbl">
+            <thead><tr><th>Tag</th><th>Name</th><th>Status</th><th>AI</th><th>Health</th></tr></thead>
+            <tbody>
+              {assets.map(a => {
+                const t = TELEMETRY[a.asset_tag] || {};
+                return (
+                  <tr key={a.id}>
+                    <td><span className="mono">{a.asset_tag}</span></td>
+                    <td style={{fontWeight:500}}>{a.name}</td>
+                    <td><StatusBadge status={a.status_label?.name}/></td>
+                    <td><AiBadge level={getAiScore(a)}/></td>
+                    <td style={{minWidth:100}}>{t.health !== undefined ? <HealthBar score={t.health}/> : <span style={{color:'var(--text3)',fontSize:11}}>—</span>}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        <div style={{display:'flex',flexDirection:'column',gap:14}}>
+          <div className="card">
+            <div className="card-head"><span className="card-title">By category</span></div>
+            <div style={{position:'relative',height:130}}>
+              <canvas ref={catRef} role="img" aria-label="Assets by category">Assets by category</canvas>
+            </div>
+          </div>
+          <div className="card">
+            <div className="card-head"><span className="card-title">Purchase orders</span></div>
+            {poLabels.length > 0
+              ? <div style={{position:'relative',height:Math.max(poLabels.length*42+20,80)}}>
+                  <canvas ref={poRef} role="img" aria-label="PO values">PO values</canvas>
+                </div>
+              : <div style={{fontSize:12,color:'var(--text3)',padding:'0.5rem 0'}}>No PO data yet.</div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div className="card" style={{marginBottom:14}}>
+        <div className="card-head"><span className="card-title">📡 Device health (InfluxDB telemetry)</span></div>
+        <div style={{position:'relative',height:180}}>
+          <canvas ref={healthRef} role="img" aria-label="Device health scores">Device health scores</canvas>
+        </div>
+        <div style={{display:'flex',gap:16,marginTop:12,fontSize:12,color:'var(--text2)'}}>
+          <span><span style={{color:'#E24B4A'}}>■</span> Critical (&lt;40%)</span>
+          <span><span style={{color:'#EF9F27'}}>■</span> Warning (40–65%)</span>
+          <span><span style={{color:'#1D9E75'}}>■</span> Healthy (&gt;65%)</span>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-head"><span className="card-title">Recent activity</span></div>
+        {[
+          { color:'var(--red)',  text:<>InfluxDB alert — <strong>AAI-2026-00001</strong> battery at 8%, CPU at 94% — critical</>, time:'14:54' },
+          { color:'var(--red)',  text:<>MongoDB ticket — <strong>AAI-2026-00001</strong> logged as High priority maintenance</>, time:'14:35' },
+          { color:'var(--teal)', text:<>AI scorer flagged <strong>AAI-2026-00001</strong> — Status → Maintenance-High (BR003)</>, time:'08:10' },
+          { color:'var(--teal)', text:<>Procurement intake — {assets.length} assets from POs. Total ₱{Math.round(totalValue).toLocaleString()}</>, time:'07:50' },
+          { color:'var(--blue)', text:<>HRIS sync — {users.length} staff synced across 7 departments</>, time:'07:46' },
+        ].map((f,i) => (
+          <div className="feed-item" key={i}>
+            <div className="feed-dot" style={{background:f.color}}></div>
+            <div className="feed-text">{f.text}</div>
+            <div className="feed-time">{f.time}</div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function AssetsPage({ assets }) {
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('All');
+  const cats = ['All', ...new Set(assets.map(a=>a.category?.name).filter(Boolean))];
+  const filtered = assets.filter(a =>
+    (filter==='All'||a.category?.name===filter) &&
+    ((a.name||'').toLowerCase().includes(search.toLowerCase())||(a.asset_tag||'').includes(search))
+  );
+  return (
+    <>
+      <div style={{display:'flex',gap:10,marginBottom:'1.25rem',flexWrap:'wrap',alignItems:'center'}} className="no-print">
+        <input placeholder="Search by name or tag..." value={search} onChange={e=>setSearch(e.target.value)}
+          style={{padding:'8px 14px',borderRadius:10,border:'1px solid var(--border)',background:'var(--bg2)',color:'var(--text)',fontFamily:'DM Sans,sans-serif',fontSize:13,width:260}} />
+        {cats.map(c=><button key={c} className={`btn btn-sm ${filter===c?'btn-primary':''}`} onClick={()=>setFilter(c)}>{c}</button>)}
+      </div>
+      <div className="card">
+        <table className="tbl">
+          <thead><tr><th>Asset Tag</th><th>Name</th><th>Category</th><th>Location</th><th>Status</th><th>AI Score</th><th>Health</th></tr></thead>
+          <tbody>
+            {filtered.map(a=>{
+              const t = TELEMETRY[a.asset_tag] || {};
+              return (
+                <tr key={a.id}>
+                  <td><span className="mono">{a.asset_tag}</span></td>
+                  <td style={{fontWeight:500}}>{a.name}</td>
+                  <td><span className="badge badge-blue">{a.category?.name||'—'}</span></td>
+                  <td><span className="mono">{a.location?.name||'—'}</span></td>
+                  <td><StatusBadge status={a.status_label?.name}/></td>
+                  <td><AiBadge level={getAiScore(a)}/></td>
+                  <td style={{minWidth:110}}>{t.health!==undefined?<HealthBar score={t.health}/>:<span style={{color:'var(--text3)',fontSize:11}}>—</span>}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
+function TelemetryPage() {
+  return (
+    <>
+      <div className="metrics" style={{gridTemplateColumns:'repeat(3,1fr)'}}>
+        <div className="metric-card alert">
+          <div className="metric-top"><div className="metric-icon red">🔴</div></div>
+          <div className="metric-val red">1</div>
+          <div className="metric-label">Critical devices</div>
+        </div>
+        <div className="metric-card">
+          <div className="metric-top"><div className="metric-icon amber">🟡</div></div>
+          <div className="metric-val">0</div>
+          <div className="metric-label">Warning devices</div>
+        </div>
+        <div className="metric-card">
+          <div className="metric-top"><div className="metric-icon teal">🟢</div></div>
+          <div className="metric-val">8</div>
+          <div className="metric-label">Healthy devices</div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-head"><span className="card-title">📡 Live telemetry — all devices</span></div>
+        <table className="tbl">
+          <thead><tr><th>Asset Tag</th><th>Battery</th><th>CPU</th><th>Health Score</th><th>Status</th></tr></thead>
+          <tbody>
+            {Object.entries(TELEMETRY).map(([tag, t]) => (
+              <tr key={tag}>
+                <td><span className="mono">{tag}</span></td>
+                <td>
+                  <div style={{display:'flex',alignItems:'center',gap:8}}>
+                    <div className="health-bar-bg" style={{width:80}}>
+                      <div className="health-bar-fill" style={{width:`${t.battery}%`,background:t.battery<20?'#E24B4A':t.battery<50?'#EF9F27':'#1D9E75'}}></div>
+                    </div>
+                    <span style={{fontSize:11,color:'var(--text2)'}}>{t.battery}%</span>
+                  </div>
+                </td>
+                <td>
+                  <div style={{display:'flex',alignItems:'center',gap:8}}>
+                    <div className="health-bar-bg" style={{width:80}}>
+                      <div className="health-bar-fill" style={{width:`${t.cpu}%`,background:t.cpu>80?'#E24B4A':t.cpu>60?'#EF9F27':'#1D9E75'}}></div>
+                    </div>
+                    <span style={{fontSize:11,color:'var(--text2)'}}>{t.cpu}%</span>
+                  </div>
+                </td>
+                <td><HealthBar score={t.health}/></td>
+                <td><span className={`badge ${t.status==='critical'?'badge-high':'badge-ready'}`}>{t.status==='critical'?'🔴 Critical':'🟢 Healthy'}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
+function UsersPage({ users }) {
+  return (
+    <div className="card">
+      <table className="tbl">
+        <thead><tr><th>Employee</th><th>Department</th><th>Job Title</th><th>Employee #</th><th>Status</th></tr></thead>
+        <tbody>
+          {users.map(u=>(
+            <tr key={u.id}>
+              <td><div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div className="avatar">{initials(u.name)}</div>
+                <span style={{fontWeight:500}}>{u.name}</span>
+              </div></td>
+              <td style={{color:'var(--text2)',fontSize:13}}>{u.department?.name||'—'}</td>
+              <td><span className="badge badge-blue">{u.jobtitle||'—'}</span></td>
+              <td><span className="mono">{u.employee_num||'—'}</span></td>
+              <td><span className={`badge ${u.activated?'badge-ready':'badge-maint'}`}>{u.activated?'Active':'Inactive'}</span></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function QRCodeBox({ text, size=100 }) {
+  const ref = useRef(null);
+  useEffect(()=>{
+    if(!ref.current) return;
+    ref.current.innerHTML='';
+    try { new QRCode(ref.current,{text,width:size,height:size,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M}); }
+    catch(e){}
+  },[text,size]);
+  return <div ref={ref}/>;
+}
+
+function QRPage({ assets }) {
+  const [lookup, setLookup] = useState('');
+  const [result, setResult] = useState(null);
+  const [notFound, setNotFound] = useState(false);
+  const doLookup = () => {
+    const found = assets.find(a=>(a.asset_tag||'').toUpperCase()===lookup.trim().toUpperCase());
+    found?(setResult(found),setNotFound(false)):(setResult(null),setNotFound(true));
+  };
+  return (
+    <>
+      <div className="card no-print" style={{maxWidth:520,marginBottom:'1.5rem'}}>
+        <div className="card-head"><span className="card-title">🔍 Asset Lookup</span></div>
+        <div style={{display:'flex',gap:10}}>
+          <input className="qr-input" placeholder="e.g. AAI-2026-00001" value={lookup}
+            onChange={e=>setLookup(e.target.value)} onKeyDown={e=>e.key==='Enter'&&doLookup()}/>
+          <button className="btn btn-primary" onClick={doLookup}>Look up</button>
+        </div>
+        {result&&(
+          <div style={{marginTop:'1rem',background:'var(--bg3)',borderRadius:10,padding:'1rem'}}>
+            {[['Tag',result.asset_tag],['Name',result.name],['Location',result.location?.name||'—'],['Status',result.status_label?.name||'—']].map(([k,v])=>(
+              <div className="result-row" key={k}><span style={{color:'var(--text2)'}}>{k}</span><span style={{fontWeight:500}}>{v}</span></div>
+            ))}
+            {TELEMETRY[result.asset_tag] && (
+              <div className="result-row">
+                <span style={{color:'var(--text2)'}}>Health</span>
+                <HealthBar score={TELEMETRY[result.asset_tag].health}/>
+              </div>
+            )}
+            {result.status_label?.name?.includes('Maintenance')&&(
+              <div style={{marginTop:10,padding:'8px 12px',background:'var(--red-dim)',borderRadius:8,fontSize:13,color:'var(--red)'}}>
+                ⚠️ High priority — escalate for immediate repair.
+              </div>
+            )}
+          </div>
+        )}
+        {notFound&&<div style={{marginTop:12,color:'var(--red)',fontSize:13}}>Asset tag not found.</div>}
+      </div>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'1rem'}} className="no-print">
+        <span className="card-title">🖨️ QR Labels — {assets.length} assets</span>
+        <button className="btn btn-primary btn-sm" onClick={()=>window.print()}>Print all labels</button>
+      </div>
+      <div className="qr-grid">
+        {assets.map(a=>(
+          <div className="qr-asset-card" key={a.id}>
+            <div className="qr-code-box"><QRCodeBox text={`http://snipe-it.test/hardware/${a.id}`} size={110}/></div>
+            <div className="mono" style={{textAlign:'center',fontSize:11}}>{a.asset_tag}</div>
+            <div style={{fontSize:13,fontWeight:500,color:'var(--text)',textAlign:'center'}}>{a.name}</div>
+            <div style={{fontSize:11,color:'var(--text3)',textAlign:'center'}}>{a.location?.name||'No location'}</div>
+            <StatusBadge status={a.status_label?.name}/>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function App() {
+  const [token,   setToken]   = useState(localStorage.getItem('snipeit_token')||'');
+  const [page,    setPage]    = useState('dashboard');
+  const [assets,  setAssets]  = useState([]);
+  const [users,   setUsers]   = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState(null);
+
+  const loadData = useCallback(async()=>{
+    if(!localStorage.getItem('snipeit_token')) return;
+    setLoading(true); setError(null);
+    try {
+      const [a,u] = await Promise.all([apiFetch('hardware?limit=500'),apiFetch('users?limit=500')]);
+      setAssets(a.rows||[]); setUsers(u.rows||[]);
+    } catch(e){ setError('Cannot reach Snipe-IT. Is proxy.py running?'); }
+    finally { setLoading(false); }
+  },[]);
+
+  useEffect(()=>{ if(token) loadData(); },[token]);
+
+  if(!token) return <TokenGate onSave={t=>{setToken(t);}}/>;
+
+  const nav=[
+    {id:'dashboard', label:'Dashboard',  icon:'📊'},
+    {id:'assets',    label:'Assets',     icon:'💻'},
+    {id:'telemetry', label:'Telemetry',  icon:'📡'},
+    {id:'users',     label:'Staff',      icon:'👥'},
+    {id:'qr',        label:'QR Labels',  icon:'📷'},
+  ];
+  const titles={dashboard:'Dashboard',assets:'Assets',telemetry:'Device Telemetry',users:'Staff directory',qr:'QR Labels'};
+  const subs={dashboard:'Live data — Snipe-IT + MongoDB + InfluxDB',assets:'All hardware inventory',telemetry:'Live device health from InfluxDB',users:'Synced from HRIS',qr:'Generate & print QR labels'};
+
+  return (
+    <>
+      <nav className="sidebar no-print">
+        <div className="sidebar-logo"><div className="logo-icon">🏛️</div><span>Ascendia AMS</span></div>
+        <div className="nav-section">Main</div>
+        {nav.map(n=>(
+          <div key={n.id} className={`nav-item ${page===n.id?'active':''}`} onClick={()=>setPage(n.id)}>
+            <span style={{fontSize:16,width:18,textAlign:'center'}}>{n.icon}</span>{n.label}
+          </div>
+        ))}
+        <div className="sidebar-footer">
+          <strong>Darwin Mari</strong>darwin.admin · IT Admin
+          <div style={{marginTop:10,display:'flex',flexDirection:'column',gap:6}}>
+            <button className="btn btn-sm" style={{width:'100%'}} onClick={loadData}>{loading?<Spinner/>:'↻ Refresh data'}</button>
+            <button className="btn btn-sm" style={{width:'100%',color:'var(--red)'}} onClick={()=>{localStorage.removeItem('snipeit_token');setToken('');}}>Disconnect</button>
+          </div>
+        </div>
+      </nav>
+
+      <main className="main">
+        <div className="topbar no-print">
+          <div><div className="page-title">{titles[page]}</div><div className="page-sub">{subs[page]}</div></div>
+          <div className="topbar-right">
+            {loading&&<Spinner/>}
+            {error&&<span style={{fontSize:12,color:'var(--red)'}}>{error}</span>}
+            <span style={{fontSize:12,color:'var(--text3)'}}>{new Date().toLocaleDateString('en-PH',{dateStyle:'medium'})}</span>
+            <button className="btn btn-primary">+ New Asset</button>
+          </div>
+        </div>
+        {page==='dashboard' &&<Dashboard assets={assets} users={users}/>}
+        {page==='assets'    &&<AssetsPage assets={assets}/>}
+        {page==='telemetry' &&<TelemetryPage/>}
+        {page==='users'     &&<UsersPage users={users}/>}
+        {page==='qr'        &&<QRPage assets={assets}/>}
+      </main>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

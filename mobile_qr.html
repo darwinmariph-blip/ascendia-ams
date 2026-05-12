@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Ascendia AMS — Mobile QR Scanner</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0F1117;--bg2:#181B24;--bg3:#1E2230;--border:rgba(255,255,255,0.08);--text:#E8EAF0;--text2:#8B90A0;--text3:#555B6E;--teal:#1D9E75;--teal-dim:rgba(29,158,117,0.15);--red:#E24B4A;--red-dim:rgba(226,75,74,0.15);--amber:#EF9F27;--radius:12px}
+    body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:480px;margin:0 auto;padding:1rem}
+    .header{display:flex;align-items:center;gap:10px;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:0.5px solid var(--border)}
+    .logo{width:32px;height:32px;border-radius:8px;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .header h1{font-size:16px;font-weight:600}
+    .header p{font-size:12px;color:var(--text2)}
+    .tabs{display:flex;background:var(--bg2);border-radius:var(--radius);padding:4px;gap:4px;margin-bottom:1.25rem;border:0.5px solid var(--border)}
+    .tab{flex:1;padding:8px;border-radius:9px;font-size:13px;font-weight:500;text-align:center;cursor:pointer;color:var(--text2);transition:all .15s}
+    .tab.active{background:var(--bg3);color:var(--text)}
+    .card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem}
+    .card-title{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:1rem}
+    #reader{border-radius:var(--radius);overflow:hidden;width:100%!important}
+    .input-row{display:flex;gap:8px;margin-top:1rem}
+    input{flex:1;padding:10px 14px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg3);color:var(--text);font-size:14px;font-family:monospace}
+    input:focus{outline:none;border-color:var(--teal)}
+    button{padding:10px 16px;border-radius:10px;border:none;background:var(--teal);color:#fff;font-size:13px;font-weight:500;cursor:pointer}
+    button.sec{background:var(--bg3);color:var(--text2);border:0.5px solid var(--border)}
+    .result{background:var(--bg3);border-radius:var(--radius);padding:1rem;margin-top:1rem}
+    .rrow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--border);font-size:13px}
+    .rrow:last-child{border-bottom:none}
+    .rlabel{color:var(--text2)}
+    .rval{font-weight:500}
+    .badge{font-size:11px;padding:3px 9px;border-radius:99px;font-weight:500}
+    .b-ready{background:var(--teal-dim);color:var(--teal)}
+    .b-maint{background:var(--red-dim);color:var(--red)}
+    .b-blue{background:rgba(55,138,221,.15);color:#378ADD}
+    .alert{padding:10px 14px;border-radius:10px;font-size:13px;margin-top:10px}
+    .a-ok{background:var(--teal-dim);color:var(--teal);border:0.5px solid var(--teal)}
+    .a-err{background:var(--red-dim);color:var(--red);border:0.5px solid var(--red)}
+    .abtn{width:100%;margin-top:8px;padding:11px;border-radius:10px;border:none;font-size:14px;font-weight:500;cursor:pointer}
+    .a-teal{background:var(--teal);color:#fff}
+    .a-amber{background:var(--amber);color:#000}
+    .a-audit{background:rgba(55,138,221,.2);color:#378ADD;border:0.5px solid #378ADD}
+    .hist{max-height:300px;overflow-y:auto}
+    .hitem{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px}
+    .hitem:last-child{border-bottom:none}
+    .hdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .htxt{flex:1}
+    .htime{font-size:11px;color:var(--text3)}
+    .empty{text-align:center;color:var(--text3);font-size:13px;padding:2rem 0}
+    .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="logo"><img src="logo.png" style="width:100%;height:100%;object-fit:cover;border-radius:8px;"></div>
+  <div><h1>Ascendia AMS</h1><p>Mobile QR Scanner</p></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" id="t-scan" onclick="sw('scan')">📷 Scan</div>
+  <div class="tab" id="t-manual" onclick="sw('manual')">⌨️ Manual</div>
+  <div class="tab" id="t-history" onclick="sw('history')">📋 History</div>
+</div>
+
+<div id="p-scan">
+  <div class="card">
+    <div class="card-title">Camera QR Scanner</div>
+    <div id="reader"></div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button onclick="startCam()" id="b-start">▶ Start Camera</button>
+      <button onclick="stopCam()" class="sec" id="b-stop" style="display:none">⏹ Stop</button>
+    </div>
+  </div>
+  <div id="r-scan"></div>
+</div>
+
+<div id="p-manual" style="display:none">
+  <div class="card">
+    <div class="card-title">Manual Asset Lookup</div>
+    <div class="input-row">
+      <input id="m-input" placeholder="AAI-2026-00001" />
+      <button onclick="doManual()">Look up</button>
+    </div>
+  </div>
+  <div id="r-manual"></div>
+</div>
+
+<div id="p-history" style="display:none">
+  <div class="card">
+    <div class="card-title">Scan History</div>
+    <div class="hist" id="hist-list"><div class="empty">No scans yet.</div></div>
+  </div>
+</div>
+
+<script>
+const PROXY='http://192.168.1.158:8888';
+let qr=null, history=JSON.parse(localStorage.getItem('ams_hist')||'[]');
+
+function sw(t){
+  ['scan','manual','history'].forEach(x=>{
+    document.getElementById('p-'+x).style.display=x===t?'block':'none';
+    document.getElementById('t-'+x).classList.toggle('active',x===t);
+  });
+  if(t==='history') renderHist();
+}
+
+async function getAsset(tag){
+  try{
+    const r=await fetch(`${PROXY}/api/v1/hardware/bytag/${encodeURIComponent(tag)}`,{headers:{'Authorization':'Bearer any','Accept':'application/json'}});
+    return r.ok?await r.json():null;
+  }catch{return null;}
+}
+
+function aiScore(a){return (a.custom_fields||{})['AI Priority Score']?.value||'Unscored';}
+
+function sbadge(s){
+  s=s||'—';
+  const c=s.includes('Maintenance')?'b-maint':s.includes('Ready')?'b-ready':'b-blue';
+  return `<span class="badge ${c}">${s}</span>`;
+}
+
+function showAsset(a,cid){
+  if(!a||a.status==='error'){
+    document.getElementById(cid).innerHTML=`<div class="alert a-err">❌ Asset not found.</div>`;
+    return;
+  }
+  const ai=aiScore(a);
+  const dot=ai==='High'?'🔴':ai==='Medium'?'🟡':ai==='Low'?'🟢':'⚪';
+  document.getElementById(cid).innerHTML=`
+    <div class="result">
+      <div class="rrow"><span class="rlabel">Tag</span><span class="rval" style="font-family:monospace">${a.asset_tag||'—'}</span></div>
+      <div class="rrow"><span class="rlabel">Name</span><span class="rval">${a.name||'—'}</span></div>
+      <div class="rrow"><span class="rlabel">Category</span><span class="rval">${a.category?.name||'—'}</span></div>
+      <div class="rrow"><span class="rlabel">Location</span><span class="rval">${a.location?.name||'—'}</span></div>
+      <div class="rrow"><span class="rlabel">Status</span>${sbadge(a.status_label?.name)}</div>
+      <div class="rrow"><span class="rlabel">AI Score</span><span class="rval">${dot} ${ai}</span></div>
+      ${a.assigned_to?`<div class="rrow"><span class="rlabel">Assigned to</span><span class="rval">${a.assigned_to.name||'—'}</span></div>`:''}
+    </div>
+    ${ai==='High'?`<div class="alert a-err">⚠️ High priority — escalate immediately!</div>`:`<div class="alert a-ok">✅ Asset verified.</div>`}
+    <button class="abtn a-audit" onclick="logScan('${a.asset_tag}','${a.location?.name||''}')">📋 Log QR Audit Scan</button>
+    ${!a.assigned_to?`<button class="abtn a-teal" onclick="alert('Open Snipe-IT to complete checkout.')">📤 Check Out</button>`:`<button class="abtn a-amber" onclick="alert('Open Snipe-IT to complete check-in.')">📥 Check In</button>`}
+  `;
+}
+
+function logScan(tag,loc){
+  addHist(tag,'QR Audit Scan','#1D9E75');
+  alert(`✅ Audit scan logged for ${tag} at ${loc||'unknown location'}`);
+}
+
+function addHist(tag,action,color){
+  history.unshift({tag,action,color,time:new Date().toLocaleTimeString()});
+  history=history.slice(0,50);
+  localStorage.setItem('ams_hist',JSON.stringify(history));
+}
+
+function renderHist(){
+  const el=document.getElementById('hist-list');
+  if(!history.length){el.innerHTML='<div class="empty">No scans yet.</div>';return;}
+  el.innerHTML=history.map(h=>`
+    <div class="hitem">
+      <div class="hdot" style="background:${h.color||'#1D9E75'}"></div>
+      <div class="htxt"><strong>${h.tag}</strong> — ${h.action}</div>
+      <div class="htime">${h.time}</div>
+    </div>`).join('');
+}
+
+async function startCam(){
+  document.getElementById('b-start').style.display='none';
+  document.getElementById('b-stop').style.display='inline-block';
+  qr=new Html5Qrcode("reader");
+  try{
+    await qr.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},async decoded=>{
+      await qr.stop();
+      document.getElementById('b-start').style.display='inline-block';
+      document.getElementById('b-stop').style.display='none';
+      const tag=decoded.split('/').pop();
+      document.getElementById('r-scan').innerHTML=`<div class="card"><span class="spin"></span>Looking up ${tag}...</div>`;
+      const asset=await getAsset(tag);
+      showAsset(asset,'r-scan');
+      addHist(tag,'Camera scan','#1D9E75');
+    },()=>{});
+  }catch(e){
+    document.getElementById('r-scan').innerHTML=`<div class="alert a-err">❌ Camera error: ${e.message||e}<br>Use Manual tab instead.</div>`;
+    document.getElementById('b-start').style.display='inline-block';
+    document.getElementById('b-stop').style.display='none';
+  }
+}
+
+function stopCam(){if(qr)qr.stop().catch(()=>{});document.getElementById('b-start').style.display='inline-block';document.getElementById('b-stop').style.display='none';}
+
+async function doManual(){
+  const tag=document.getElementById('m-input').value.trim().toUpperCase();
+  if(!tag)return;
+  document.getElementById('r-manual').innerHTML=`<div class="card"><span class="spin"></span>Looking up ${tag}...</div>`;
+  const asset=await getAsset(tag);
+  showAsset(asset,'r-manual');
+  addHist(tag,'Manual lookup','#378ADD');
+}
+
+document.getElementById('m-input').addEventListener('keydown',e=>{if(e.key==='Enter')doManual();});
+</script>
+</body>
+</html>
