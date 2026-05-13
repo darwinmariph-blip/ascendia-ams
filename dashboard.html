@@ -723,7 +723,7 @@ function LicensePage({showToast}){
   };
 
   return(<>
-    <div className="metrics" style={{gridTemplateColumns:'repeat(3,1fr)',marginBottom:14}}>
+    <div className="metrics" style={{gridTemplateColumns:'repeat(5,1fr)',marginBottom:14}}>
       <div className="metric-card"><div className="metric-top"><div className="metric-icon teal">📄</div></div><div className="metric-val">{licenses.length}</div><div className="metric-label">Total licenses</div></div>
       <div className="metric-card"><div className="metric-top"><div className="metric-icon blue">💺</div></div><div className="metric-val">{licenses.reduce((s,l)=>s+(l.seats||0),0)}</div><div className="metric-label">Total seats</div></div>
       <div className={`metric-card ${licenses.some(l=>{const d=(new Date(l.expiration_date)-new Date())/86400000;return d<30&&d>0;})?'alert':''}`}><div className="metric-top"><div className="metric-icon amber">⏰</div></div><div className="metric-val">{licenses.filter(l=>{const d=(new Date(l.expiration_date)-new Date())/86400000;return d<30&&d>0;}).length}</div><div className="metric-label">Expiring soon</div></div>
@@ -1082,12 +1082,35 @@ function AcknowledgmentsPage({assets,users,showToast}){
 
 /* ── LMS / Class Schedule Page ── */
 function LMSPage({assets}){
-  const schedules=[
-    {id:'SCH-001',course:'MSIT 631 — Advanced Systems Design',room:'QC-MAIN-LAB1',day:'Tuesday/Thursday',time:'09:00-11:00',instructor:'Miguel Torres',students:25,assets_needed:['Laptop','Projector'],critical:false},
-    {id:'SCH-002',course:'CS 101 — Introduction to Programming',room:'QC-MAIN-LAB1',day:'Monday/Wednesday/Friday',time:'13:00-15:00',instructor:'Maria Santos',students:30,assets_needed:['Laptop'],critical:true},
+  const now=new Date();
+  const dayNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const today=dayNames[now.getDay()];
+  const currentTime=now.getHours()*100+now.getMinutes();
+  const isActive=(day,time)=>{
+    const dayMatch=day.split('/').some(d=>today.includes(d.trim()));
+    const [start,end]=time.split('-').map(t=>{const[h,m]=t.split(':');return parseInt(h)*100+parseInt(m);});
+    return dayMatch&&currentTime>=start&&currentTime<=end;
+  };
+  const isLaterToday=(day,time)=>{
+    if(!day.split('/').some(d=>today.includes(d.trim())))return false;
+    const[h,m]=time.split('-')[0].split(':');
+    return parseInt(h)*100+parseInt(m)>currentTime;
+  };
+  const [schedules,setSchedules]=useState([
+    {id:'SCH-001',course:'MSIT 631 — Advanced Systems Design',room:'QC-MAIN-LAB1',day:'Tuesday/Thursday',time:'09:00-11:00',instructor:'Miguel Torres',students:25,assets_needed:['Desktop','Projector'],critical:false},
+    {id:'SCH-002',course:'CS 101 — Introduction to Programming',room:'QC-MAIN-LAB1',day:'Monday/Wednesday/Friday',time:'13:00-15:00',instructor:'Maria Santos',students:30,assets_needed:['Desktop'],critical:false},
     {id:'SCH-003',course:'Finance 201 — Financial Management',room:'QC-MAIN-CLASS101',day:'Tuesday/Thursday',time:'14:00-16:00',instructor:'Juan Dela Cruz',students:35,assets_needed:['Projector'],critical:false},
-  ];
+  ]);
+  useEffect(()=>{
+    fetch('http://localhost:8080/lms/schedules')
+      .then(r=>r.json())
+      .then(d=>{if(d.schedules&&d.schedules.length>0)setSchedules(d.schedules);})
+      .catch(()=>{});
+  },[]);
 
+  const [lmsView,setLmsView]=useState('all');
+  const tomorrowName=dayNames[(now.getDay()+1)%7];
+  const isTomorrow=(day)=>day.split('/').some(d=>tomorrowName.includes(d.trim()));
   const getLabAssets=(room)=>assets.filter(a=>(a.location?.name||'')===room);
   const getReadiness=(room,needed)=>{
     const roomAssets=getLabAssets(room);
@@ -1097,22 +1120,103 @@ function LMSPage({assets}){
 
   return(<>
     <div className="metrics" style={{gridTemplateColumns:'repeat(3,1fr)',marginBottom:14}}>
-      <div className="metric-card"><div className="metric-top"><div className="metric-icon blue">📅</div></div><div className="metric-val">{schedules.length}</div><div className="metric-label">Active schedules</div></div>
-      <div className="metric-card"><div className="metric-top"><div className="metric-icon red">⚠️</div></div><div className="metric-val">{schedules.filter(s=>s.critical).length}</div><div className="metric-label">Critical period classes</div></div>
-      <div className="metric-card"><div className="metric-top"><div className="metric-icon teal">🏫</div></div><div className="metric-val">{[...new Set(schedules.map(s=>s.room))].length}</div><div className="metric-label">Rooms in use</div></div>
+      <div className="metric-card" style={{cursor:'pointer'}} onClick={()=>setLmsView('all')}><div className="metric-top"><div className="metric-icon blue">📅</div></div><div className="metric-val">{schedules.length}</div><div className="metric-label">Active schedules</div></div>
+      <div className={`metric-card ${schedules.filter(s=>s.critical).length>0?'alert':''}`} style={{cursor:'pointer'}} onClick={()=>setLmsView('critical')}><div className="metric-top"><div className="metric-icon red">⚠️</div></div><div className="metric-val">{schedules.filter(s=>s.critical).length}</div><div className="metric-label">Critical period classes</div></div>
+      <div className="metric-card" style={{cursor:'pointer'}} onClick={()=>setLmsView('rooms')}><div className="metric-top"><div className="metric-icon teal">🏫</div></div><div className="metric-val">{[...new Set(schedules.filter(s=>isActive(s.day,s.time)).map(s=>s.room))].length}</div><div className="metric-label">Rooms in use now</div></div>
+      <div className="metric-card" style={{cursor:'pointer'}} onClick={()=>setLmsView('upcoming')}><div className="metric-top"><div className="metric-icon amber">⏰</div></div><div className="metric-val">{schedules.filter(s=>isLaterToday(s.day,s.time)).length}</div><div className="metric-label">Upcoming today</div></div>
+      <div className="metric-card" style={{cursor:'pointer'}} onClick={()=>setLmsView('tomorrow')}><div className="metric-top"><div className="metric-icon blue">📆</div></div><div className="metric-val">{schedules.filter(s=>isTomorrow(s.day)).length}</div><div className="metric-label">Tomorrow's classes</div></div>
     </div>
+    {lmsView==='rooms'&&(
+      <div className="card" style={{marginBottom:14}}>
+        <div className="card-head"><span className="card-title">🏫 Rooms in use</span><button className="btn btn-sm" onClick={()=>setLmsView('all')}>Show all</button></div>
+        {[...new Set(schedules.filter(s=>isActive(s.day,s.time)).map(s=>s.room))].map(room=>{
+          const roomAssets=assets.filter(a=>(a.location?.name||'')===room);
+          const issues=roomAssets.filter(a=>a.status_label?.name?.includes('Maintenance'));
+          const roomSchedules=schedules.filter(s=>s.room===room);
+          return(<div key={room} style={{padding:'10px 0',borderBottom:'0.5px solid var(--border)'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <span className="mono" style={{fontWeight:500}}>{room}</span>
+              <div style={{display:'flex',gap:10,fontSize:12}}>
+                <span>📦 {roomAssets.length} assets</span>
+                <span style={{color:'var(--teal)'}}>✅ {roomAssets.length-issues.length} ready</span>
+                {issues.length>0&&<span style={{color:'var(--red)'}}>⚠️ {issues.length} issues</span>}
+              </div>
+            </div>
+            <div style={{fontSize:12,color:'var(--text2)',marginTop:4}}>{roomSchedules.map(s=>s.course).join(' • ')}</div>
+          </div>);
+        })}
+      </div>
+    )}
+    {lmsView==='upcoming'&&(
+      <div className="card" style={{marginBottom:14}}>
+        <div className="card-head"><span className="card-title">⏰ Upcoming Classes Today</span><button className="btn btn-sm" onClick={()=>setLmsView('all')}>Show all</button></div>
+        {schedules.filter(s=>isLaterToday(s.day,s.time)).length===0
+          ?<div style={{color:'var(--text3)',fontSize:13}}>No more classes today.</div>
+          :schedules.filter(s=>isLaterToday(s.day,s.time)).map(s=>{
+            const roomAssets=assets.filter(a=>(a.location?.name||'')===s.room);
+            const issues=roomAssets.filter(a=>a.status_label?.name?.includes('Maintenance'));
+            return(<div key={s.id} style={{padding:'10px 0',borderBottom:'0.5px solid var(--border)'}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <div>
+                  <div style={{fontWeight:500,fontSize:14}}>{s.course}</div>
+                  <div style={{fontSize:12,color:'var(--text2)',marginTop:2}}>{s.time} • {s.instructor} • {s.students} students • {s.room}</div>
+                </div>
+                <div style={{display:'flex',gap:8}}>
+                  {issues.length>0
+                    ?<span className="badge badge-high">⚠️ {issues.length} issue(s)</span>
+                    :<span className="badge badge-ready">✅ Ready</span>}
+                </div>
+              </div>
+            </div>);
+          })
+        }
+      </div>
+    )}
+    {lmsView==='tomorrow'&&(
+      <div className="card" style={{marginBottom:14}}>
+        <div className="card-head"><span className="card-title">📆 Tomorrow's Schedule — {tomorrowName}</span><button className="btn btn-sm" onClick={()=>setLmsView('all')}>Show all</button></div>
+        {schedules.filter(s=>isTomorrow(s.day)).length===0
+          ?<div style={{color:'var(--text3)',fontSize:13,padding:'0.5rem 0'}}>No classes scheduled for tomorrow.</div>
+          :schedules.filter(s=>isTomorrow(s.day)).map(s=>{
+            const roomAssets=assets.filter(a=>(a.location?.name||'')===s.room);
+            const issues=roomAssets.filter(a=>a.status_label?.name?.includes('Maintenance'));
+            return(<div key={s.id} style={{padding:'10px 0',borderBottom:'0.5px solid var(--border)'}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <div>
+                  <div style={{fontWeight:500,fontSize:14}}>{s.course}</div>
+                  <div style={{fontSize:12,color:'var(--text2)',marginTop:2}}>{s.time} • {s.instructor} • {s.students} students • {s.room}</div>
+                </div>
+                <div style={{display:'flex',gap:8}}>
+                  {issues.length>0
+                    ?<span className="badge badge-high">⚠️ {issues.length} issue(s)</span>
+                    :<span className="badge badge-ready">✅ Ready</span>}
+                </div>
+              </div>
+            </div>);
+          })
+        }
+      </div>
+    )}
+    {lmsView==='critical'&&(
+      <div className="card" style={{marginBottom:14}}>
+        <div className="card-head"><span className="card-title">⚠️ Critical Period Classes</span><button className="btn btn-sm" onClick={()=>setLmsView('all')}>Show all</button></div>
+        {schedules.filter(s=>s.critical).length===0?<div style={{color:'var(--teal)',fontSize:13}}>✅ No critical period classes.</div>:schedules.filter(s=>s.critical).map(s=>(<div key={s.id} style={{padding:'8px 0',borderBottom:'0.5px solid var(--border)',fontSize:13}}><strong>{s.course}</strong> — {s.room} • {s.day} {s.time}</div>))}
+      </div>
+    )}
     {schedules.map(s=>{
       const r=getReadiness(s.room,s.assets_needed);
       return(
-        <div key={s.id} className="card" style={{marginBottom:14,border:s.critical?'1px solid var(--red)':'1px solid var(--border)'}}>
+        <div key={s.id} className="card" style={{marginBottom:14,border:isActive(s.day,s.time)?'1px solid var(--teal)':s.critical?'1px solid var(--red)':'1px solid var(--border)',background:isActive(s.day,s.time)?'var(--teal-dim)':'var(--bg2)'}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
             <div>
               <div style={{fontWeight:500,fontSize:15}}>{s.course}</div>
               <div style={{fontSize:12,color:'var(--text2)',marginTop:4}}>{s.day} • {s.time} • {s.instructor} • {s.students} students</div>
             </div>
-            <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+              {isActive(s.day,s.time)&&<span className="badge badge-ready">🟢 Active Now</span>}
+              {isLaterToday(s.day,s.time)&&<span className="badge badge-blue">📅 Later Today</span>}
               {s.critical&&<span className="badge badge-high">🔴 Critical Period</span>}
-              <span className="badge badge-blue">{s.room}</span>
+              <span className="badge" style={{background:'var(--bg3)',color:'var(--text2)'}}>{s.room}</span>
             </div>
           </div>
           <div style={{display:'flex',gap:16,fontSize:13}}>

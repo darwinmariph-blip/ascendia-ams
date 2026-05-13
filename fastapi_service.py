@@ -184,6 +184,13 @@ def create_disposal(req: DisposalRequest):
     db.disposal_records.insert_one(record)
     return {"status": "created", "disposal_id": record["disposal_id"]}
 
+@app.get("/lms/schedules")
+def get_lms_schedules():
+    from pymongo import MongoClient
+    db = MongoClient("mongodb://localhost:27017/")["ascendia_ams"]
+    schedules = list(db.lms_schedules.find({}, {"_id": 0}))
+    return {"total": len(schedules), "schedules": schedules}
+
 @app.get("/report/summary")
 def get_summary():
     assets = snipe.list_assets(limit=500)
@@ -209,3 +216,10 @@ if __name__ == "__main__":
     print("  Summary:  http://localhost:8080/report/summary")
     print("═" * 60 + "\n")
     uvicorn.run(app, host="0.0.0.0", port=8080)
+
+@app.get("/lms/schedules")
+def get_lms_schedules():
+    from pymongo import MongoClient
+    db = MongoClient("mongodb://localhost:27017/")["ascendia_ams"]
+    schedules = list(db.lms_schedules.find({}, {"_id": 0}))
+    return {"total": len(schedules), "schedules": schedules}
