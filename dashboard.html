@@ -545,6 +545,112 @@ function TelemetryPage(){
   </>);
 }
 
+/* ── Requests Page ── */
+function RequestsPage({users,assets,showToast}){
+  const [type,setType]=useState('maintenance');
+  const [form,setForm]=useState({asset_tag:'',user_name:'',description:'',priority:'Medium',reason:'',from_location:'',to_location:''});
+  const [submitted,setSubmitted]=useState([]);
+  const [loading,setLoading]=useState(false);
+  const update=k=>e=>setForm({...form,[k]:e.target.value});
+  const submit=()=>{
+    if(!form.user_name||(!form.description&&!form.reason))return;
+    setLoading(true);
+    const req={...form,type,submitted_at:new Date().toLocaleString(),status:'Pending',id:`REQ-${Date.now()}`};
+    setSubmitted(prev=>[req,...prev]);
+    showToast(`${type.charAt(0).toUpperCase()+type.slice(1)} request submitted!`,'success');
+    setForm({asset_tag:'',user_name:'',description:'',priority:'Medium',reason:'',from_location:'',to_location:''});
+    setLoading(false);
+  };
+  const types=[
+    {id:'maintenance',label:'🔧 Maintenance',desc:'Report a broken or faulty asset'},
+    {id:'asset',label:'📦 Asset Request',desc:'Request a new asset or equipment'},
+    {id:'transfer',label:'🔄 Transfer',desc:'Request asset movement to another location'},
+  ];
+  return(<>
+    <div style={{display:'flex',gap:12,marginBottom:14}}>
+      {types.map(t=>(<div key={t.id} className="card" style={{cursor:'pointer',flex:1,border:type===t.id?'1px solid var(--teal)':'1px solid var(--border)',background:type===t.id?'var(--teal-dim)':'var(--bg2)'}} onClick={()=>setType(t.id)}>
+        <div style={{fontSize:15,fontWeight:500,color:type===t.id?'var(--teal)':'var(--text)'}}>{t.label}</div>
+        <div style={{fontSize:12,color:'var(--text2)',marginTop:4}}>{t.desc}</div>
+      </div>))}
+    </div>
+    <div className="card" style={{maxWidth:600,marginBottom:14}}>
+      <div className="card-head"><span className="card-title">📝 New {type} request</span></div>
+      <div className="form-group">
+        <label className="form-label">Your Name *</label>
+        <select className="form-input" value={form.user_name} onChange={update('user_name')}>
+          <option value="">Select your name...</option>
+          {users.filter(u=>u.activated).map(u=><option key={u.id} value={u.name}>{u.name} — {u.department?.name||'—'}</option>)}
+        </select>
+      </div>
+      {(type==='maintenance'||type==='transfer')&&(
+        <div className="form-group">
+          <label className="form-label">Asset Tag</label>
+          <select className="form-input" value={form.asset_tag} onChange={update('asset_tag')}>
+            <option value="">Select asset...</option>
+            {assets.map(a=><option key={a.id} value={a.asset_tag}>{a.asset_tag} — {a.name}</option>)}
+          </select>
+        </div>
+      )}
+      {type==='maintenance'&&(<>
+        <div className="form-group">
+          <label className="form-label">Issue Description *</label>
+          <textarea className="form-input" rows={4} placeholder="Describe the issue in detail..." value={form.description} onChange={update('description')} style={{resize:'vertical'}}/>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Priority</label>
+          <select className="form-input" value={form.priority} onChange={update('priority')}>
+            <option>Low</option><option>Medium</option><option>High</option>
+          </select>
+        </div>
+      </>)}
+      {type==='asset'&&(<>
+        <div className="form-group">
+          <label className="form-label">Asset/Equipment Needed *</label>
+          <input className="form-input" placeholder="e.g. Laptop, Projector, Printer..." value={form.description} onChange={update('description')}/>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Reason / Justification *</label>
+          <textarea className="form-input" rows={3} placeholder="Why do you need this asset?" value={form.reason} onChange={update('reason')} style={{resize:'vertical'}}/>
+        </div>
+      </>)}
+      {type==='transfer'&&(<>
+        <div className="form-group">
+          <label className="form-label">From Location</label>
+          <input className="form-input" placeholder="e.g. QC-MAIN-IT_OFFICE" value={form.from_location} onChange={update('from_location')}/>
+        </div>
+        <div className="form-group">
+          <label className="form-label">To Location</label>
+          <input className="form-input" placeholder="e.g. QC-MAIN-LAB1" value={form.to_location} onChange={update('to_location')}/>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Reason *</label>
+          <textarea className="form-input" rows={3} placeholder="Why does this asset need to be moved?" value={form.reason} onChange={update('reason')} style={{resize:'vertical'}}/>
+        </div>
+      </>)}
+      <div style={{display:'flex',justifyContent:'flex-end',marginTop:'1rem',paddingTop:'1rem',borderTop:'1px solid var(--border)'}}>
+        <button className="btn btn-primary" onClick={submit} disabled={loading||!form.user_name||(!form.description&&!form.reason)}>{loading?<Spinner/>:'Submit Request'}</button>
+      </div>
+    </div>
+    {submitted.length>0&&(
+      <div className="card">
+        <div className="card-head"><span className="card-title">📋 Submitted requests ({submitted.length})</span></div>
+        <table className="tbl">
+          <thead><tr><th>ID</th><th>Type</th><th>Asset</th><th>Requested by</th><th>Details</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody>{submitted.map(r=>(<tr key={r.id}>
+            <td><span className="mono" style={{fontSize:10}}>{r.id}</span></td>
+            <td><span className="badge badge-blue">{r.type}</span></td>
+            <td><span className="mono">{r.asset_tag||'—'}</span></td>
+            <td>{r.user_name||'—'}</td>
+            <td style={{maxWidth:200,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.description||r.reason||'—'}</td>
+            <td><span className="badge" style={{background:'var(--amber-dim)',color:'var(--amber)'}}>Pending</span></td>
+            <td style={{fontSize:11,color:'var(--text3)'}}>{r.submitted_at}</td>
+          </tr>))}</tbody>
+        </table>
+      </div>
+    )}
+  </>);
+}
+
 /* ── QR Page ── */
 function QRCodeBox({text,size=100}){const ref=useRef(null);useEffect(()=>{if(!ref.current)return;ref.current.innerHTML='';try{new QRCode(ref.current,{text,width:size,height:size,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});}catch(e){}},[text,size]);return <div ref={ref}/>;}
 
@@ -624,7 +730,7 @@ function App(){
 
   if(!token)return <TokenGate onSave={t=>{setToken(t);}}/>;
 
-  const nav=[{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'assets',label:'Assets',icon:'🖥️'},{id:'telemetry',label:'Telemetry',icon:'📡'},{id:'users',label:'Staff',icon:'👨‍💼'},{id:'qr',label:'QR Labels',icon:'🔲'}];
+  const nav=[{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'assets',label:'Assets',icon:'🖥️'},{id:'telemetry',label:'Telemetry',icon:'📡'},{id:'users',label:'Staff',icon:'👨‍💼'},{id:'requests',label:'Requests',icon:'📝'},{id:'qr',label:'QR Labels',icon:'🔲'}];
   const titles={dashboard:'Dashboard',assets:'Assets',telemetry:'Telemetry',users:'Staff',qr:'QR Labels'};
   const subs={dashboard:'Live data — Snipe-IT + MongoDB + InfluxDB',assets:'Full inventory with checkout, checkin, maintenance & location',telemetry:'Live device health from InfluxDB',users:'Synced from HRIS',qr:'Generate & print QR labels'};
 
@@ -656,6 +762,7 @@ function App(){
       {page==='assets'&&<AssetsPage assets={assets} users={users} locations={locations} reload={loadData} showToast={showToast}/>}
       {page==='telemetry'&&<TelemetryPage/>}
       {page==='users'&&<UsersPage users={users}/>}
+      {page==='requests'&&<RequestsPage users={users} assets={assets} showToast={showToast}/>}
       {page==='qr'&&<QRPage assets={assets}/>}
     </main>
     {toast&&<Toast msg={toast.msg} type={toast.type} onClose={()=>setToast(null)}/>}
