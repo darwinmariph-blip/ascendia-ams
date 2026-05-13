@@ -1,5 +1,4 @@
 .env
 backups/
 *.log
-logo.png
 __pycache__/
