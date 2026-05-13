@@ -444,7 +444,7 @@ function Dashboard({assets,users,reload,showToast,setPage}){
   <div className="metric-card" style={{cursor:'pointer'}} onClick={()=>setPage('assets')}><div className="metric-top"><div className="metric-icon teal">📦</div><span style={{fontSize:11,color:'var(--teal)'}}>live</span></div><div className="metric-val">{assets.length}</div><div className="metric-label">Total assets</div></div>
   <div className="metric-card" style={{cursor:"pointer"}} onClick={()=>setPage("users")}><div className="metric-top"><div className="metric-icon blue">👥</div></div><div className="metric-val">{users.length}</div><div className="metric-label">Staff synced</div></div>
   <div className={`metric-card ${highCount>0?'alert':''}`} style={{cursor:'pointer'}} onClick={()=>{localStorage.setItem('filterHigh','1');setPage('assets');}}><div className="metric-top"><div className="metric-icon red">⚠️</div></div><div className={`metric-val ${highCount>0?'red':''}`}>{highCount}</div><div className="metric-label">High priority (AI)</div></div>
-  <div className="metric-card" style={{cursor:"pointer"}} onClick={()=>setPage('assets')}><div className="metric-top"><div className="metric-icon amber">💰</div></div><div className="metric-val">₱{totalValue>=1000?Math.round(totalValue/1000)+'K':Math.round(totalValue)}</div><div className="metric-label">Inventory value</div></div>
+  <div className="metric-card" style={{cursor:"pointer"}} onClick={()=>setPage('assets')}><div className="metric-top"><div className="metric-icon amber">💰</div></div><div className="metric-val">₱{Math.round(totalValue).toLocaleString()}</div><div className="metric-label">Inventory value</div></div>
   </div>
     <div className="grid3">
       <div className="card">
