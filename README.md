@@ -11,7 +11,7 @@ A complete enterprise-grade IT Asset Management System built for Ascendia Academ
 **Institution:** Ascendia Academic Institution Philippines  
 **Developer:** Darwin Mari (darwin.admin)  
 **Date:** May 2026  
-**GitHub:** https://github.com/darwinmariph/ascendia-ams
+**GitHub:** https://github.com/darwinmariph-blip/ascendia-ams
 
 ---
 
