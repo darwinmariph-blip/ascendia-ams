@@ -8,17 +8,6 @@
 
 ---
 
-## Project Overview
-
-A complete enterprise-grade IT Asset Management System built for Ascendia Academic Institution Philippines using Snipe-IT as the core platform, extended with AI-assisted maintenance scoring, polyglot database persistence, a fully interactive live dashboard, and a mobile QR scanner.
-
-**Institution:** Ascendia Academic Institution Philippines  
-**Developer:** Darwin Mari (darwin.admin)  
-**Date:** May 2026  
-**GitHub:** https://github.com/darwinmariph-blip/ascendia-ams
-
----
-
 ## 🚀 Quick Start
 
 ```bash
@@ -41,15 +30,21 @@ cd ~/ascendia-ams && python3 proxy.py
 
 ---
 
-## 📊 Dashboard Features
+## 📊 Dashboard Pages
 
 | Page | Features |
 |---|---|
 | **Dashboard** | Live metrics, device health chart, clickable metric cards, recent activity |
-| **Assets** | Full inventory, search/filter, checkout, checkin, maintenance tickets, location update, clickable rows with detail modal |
-| **Telemetry** | Live InfluxDB health data, filter by critical/warning/healthy, clickable rows |
-| **Staff** | Full staff directory, clickable rows with detail modal |
-| **Requests** | Submit maintenance, asset, and transfer requests with priority selection |
+| **Assets** | Full inventory, search/filter by category/AI priority, checkout, checkin, maintenance tickets, location update, clickable rows with detail modal |
+| **Telemetry** | Live InfluxDB health data, filter by critical/warning/healthy, clickable rows with detail modal |
+| **Staff** | Full staff directory, clickable rows with detail modal, + Staff button |
+| **Requests** | Submit maintenance, asset request, and transfer requests with priority selection |
+| **Licenses** | Software license tracking, seat usage, utilization bars, expiry alerts |
+| **Audit Trail** | Full audit history with actor, before/after, timestamp, filter by type |
+| **Analytics** | Charts for asset distribution, AI priority, location breakdown, full KPI report |
+| **Disposal** | Retirement workflow with 4 evidence gates — return, data wipe, cert, finance approval |
+| **Acknowledgments** | Digital checkout acknowledgment tracking — pending and confirmed |
+| **LMS Schedule** | Class schedules, lab readiness checks, critical period alerts |
 | **QR Labels** | Generate & print QR labels, asset lookup, clickable cards with detail modal |
 
 ---
@@ -64,7 +59,7 @@ cd ~/ascendia-ams && python3 proxy.py
 | Document Store | MongoDB | Maintenance docs, assignments, audit (D2) |
 | Time-Series DB | InfluxDB 3.9 | Device telemetry, health scores (D3) |
 | Graph DB | NetworkX + MongoDB | Relationship maps (D4) |
-| Cache + Events | Redis 8.6 | Sessions, event streaming |
+| Cache + Events | Redis 8.6 | Sessions, event streaming (D5) |
 | AI Service | Python + FastAPI | NLP maintenance risk scoring |
 | Dashboard | React (HTML) | Live interactive web UI |
 | Mobile QR | HTML5 + JS | Asset scanning on mobile |
@@ -75,11 +70,13 @@ cd ~/ascendia-ams && python3 proxy.py
 
 | Item | Count |
 |---|---|
-| Total Assets | 66 (AAI-2026-00001 to AAI-2026-00111) |
+| Total Assets | 67 (AAI-2026-00001 to AAI-2026-00111) |
 | Staff | 16 across 7 departments |
 | Departments | 7 |
 | Locations | 6 (QC-MAIN hierarchy) |
+| Suppliers | 13 (all assets formally linked) |
 | Software Licenses | 3 (MS Office 365, Adobe CC, Windows 11 Education) |
+| Total Inventory Value | ₱1,980,000 |
 | Telemetry Readings | 500+ |
 | Maintenance Tickets | 5 (1 High, 1 Medium) |
 | Audit Events | 30+ |
@@ -168,7 +165,7 @@ cd ~/ascendia-ams && python3 proxy.py
 | `security_network.py` | Network topology + security docs |
 | `add_school_assets.py` | Adds 57 realistic school assets |
 | `proxy.py` | CORS proxy for dashboard |
-| `dashboard.html` | Live React dashboard (5 pages) |
+| `dashboard.html` | Live React dashboard (12 pages) |
 | `mobile_qr.html` | Mobile QR scanner |
 | `backup.sh` | Automated backup script |
 | `start.sh` | System startup script |
@@ -212,5 +209,26 @@ Location: ~/ascendia-ams/backups/ (keeps last 7)
 
 ---
 
-*Ascendia Academic Institution Philippines — IT Asset Management System*  
+## 🌐 API Endpoints (FastAPI — localhost:8080)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | / | System info |
+| GET | /health | Health check all databases |
+| GET | /assets | All assets (Redis cached) |
+| GET | /assets/{tag} | Asset by tag |
+| GET | /users | All users (Redis cached) |
+| GET | /maintenance/tickets | All tickets |
+| POST | /maintenance/tickets | Create + AI-score ticket |
+| GET | /maintenance/tickets/open | Open tickets only |
+| GET | /audit/trail | Full audit log |
+| GET | /licenses | Software licenses |
+| GET | /notifications | Notifications log |
+| GET | /disposals | Disposal records |
+| POST | /disposals | Create disposal workflow |
+| GET | /report/summary | Full KPI summary |
+
+---
+
+*Ascendia Academic Institution Philippines — IT Asset Management System*
 *Implemented by Group 1 — MSIT 631 Advanced Systems Design and Implementation*
