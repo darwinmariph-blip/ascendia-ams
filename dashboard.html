@@ -630,7 +630,7 @@ function App(){
 
   return(<>
     <nav className="sidebar no-print">
-     <div className="sidebar-logo" style={{cursor:'pointer'}} onClick={()=>setPage('dashboard')}><div className="logo-icon">🏛️</div><span style={{fontSize:14}}>Ascendia AMS</span></div>
+     <div className="sidebar-logo" style={{cursor:'pointer'}} onClick={()=>setPage('dashboard')}><div className="logo-icon">🏛️</div><span style={{fontSize:14}}><span style={{display:"block",lineHeight:1.2}}>Ascendia</span><span style={{display:"block",lineHeight:1.2,fontSize:10,color:"var(--text2)",whiteSpace:"nowrap"}}>Asset Management System</span></span></div>
       <div className="nav-section">Main</div>
       {nav.map(n=>(<div key={n.id} className={`nav-item ${page===n.id?'active':''}`} onClick={()=>setPage(n.id)}><span style={{fontSize:16,width:18,textAlign:'center'}}>{n.icon}</span>{n.label}</div>))}
       <div className="sidebar-footer">
