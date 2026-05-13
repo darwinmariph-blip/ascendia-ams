@@ -1,6 +1,7 @@
 <p align="center">
   <img src="logo.png" width="120" alt="Ascendia Logo"/>
 </p>
+
 # Ascendia Academic Institution Philippines
 ## IT Asset Management System
 ### MSIT Capstone — Technology Architecture Implementation
