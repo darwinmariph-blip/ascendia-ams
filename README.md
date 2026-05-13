@@ -49,6 +49,7 @@ cd ~/ascendia-ams && python3 proxy.py
 | **Assets** | Full inventory, search/filter, checkout, checkin, maintenance tickets, location update, clickable rows with detail modal |
 | **Telemetry** | Live InfluxDB health data, filter by critical/warning/healthy, clickable rows |
 | **Staff** | Full staff directory, clickable rows with detail modal |
+| **Requests** | Submit maintenance, asset, and transfer requests with priority selection |
 | **QR Labels** | Generate & print QR labels, asset lookup, clickable cards with detail modal |
 
 ---
