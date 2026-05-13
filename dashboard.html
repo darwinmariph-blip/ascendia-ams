@@ -16,7 +16,7 @@
     body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
     .sidebar{position:fixed;top:0;left:0;width:220px;height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:1.5rem 1rem;z-index:100;overflow-y:auto}
     .sidebar-logo{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2rem;display:flex;align-items:center;gap:8px}
-    .logo-icon{width:28px;height:28px;border-radius:7px;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:0px;background-image:url(logo.png);background-size:cover;background-position:center}
+    .logo-icon { width:40px; height:40px; border-radius:7px; background:none; display:flex; align-items:center; justify-content:center; font-size:0px; background-image:url(logo.png); background-size:cover; background-position:center; }
     .nav-section{font-size:10px;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.08em;margin:1.25rem 0 .5rem .5rem}
     .nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius);font-size:13px;color:var(--text2);cursor:pointer;transition:all .15s;margin-bottom:2px}
     .nav-item:hover{background:var(--bg3);color:var(--text)}
@@ -359,7 +359,8 @@ function TokenGate({onSave}){
 function AssetsPage({assets,users,locations,reload,showToast,initialFilter}){
   const [search,setSearch]=useState('');
   const [filter,setFilter]=useState(initialFilter||'All');useEffect(()=>{if(localStorage.getItem('filterHigh')==='1'){setFilter('High');localStorage.removeItem('filterHigh');}}, []);
-  const [modal,setModal]=useState(null); // {type, asset}
+  const [modal,setModal]=useState(null);
+  const [selected,setSelected]=useState(null);
   const cats=['All','High',...new Set(assets.map(a=>a.category?.name).filter(Boolean))];
   const filtered=assets.filter(a=>(filter==='All'||(filter==='High'&&getAiScore(a)==='High')||a.category?.name===filter)&&((a.name||'').toLowerCase().includes(search.toLowerCase())||(a.asset_tag||'').includes(search)));
   return(<>
@@ -373,7 +374,7 @@ function AssetsPage({assets,users,locations,reload,showToast,initialFilter}){
         <tbody>{filtered.map(a=>{
           const t=TELEMETRY[a.asset_tag]||{};
           const isDeployed=!!a.assigned_to;
-          return(<tr key={a.id}>
+          return(<tr key={a.id} style={{cursor:'pointer'}} onClick={()=>setSelected(a)}>
             <td><span className="mono">{a.asset_tag}</span></td>
             <td style={{fontWeight:500}}>{a.name}<div style={{fontSize:11,color:'var(--text3)'}}>{a.category?.name}</div></td>
             <td><span className="mono">{a.location?.name||'—'}</span></td>
@@ -381,7 +382,7 @@ function AssetsPage({assets,users,locations,reload,showToast,initialFilter}){
             <td><AiBadge level={getAiScore(a)}/></td>
             <td style={{minWidth:100}}>{t.health!==undefined?<HealthBar score={t.health}/>:<span style={{color:'var(--text3)',fontSize:11}}>—</span>}</td>
             <td><span style={{fontSize:12,color:'var(--text2)'}}>₱{parseFloat((a.purchase_cost||'0').toString().replace(/,/g,'')).toLocaleString()}</span></td>
-            <td>
+            <td onClick={e=>e.stopPropagation()}>
               <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
                 {!isDeployed
                   ?<button className="btn btn-sm btn-primary" onClick={()=>setModal({type:'checkout',asset:a})}>📤 Out</button>
@@ -395,6 +396,24 @@ function AssetsPage({assets,users,locations,reload,showToast,initialFilter}){
         })}</tbody>
       </table>
     </div>
+    {selected&&(
+      <div className="modal-overlay" onClick={()=>setSelected(null)}>
+        <div className="modal" onClick={e=>e.stopPropagation()}>
+          <div className="modal-title"><span className="mono">{selected.asset_tag}</span><span className="modal-close" onClick={()=>setSelected(null)}>✕</span></div>
+          <div style={{background:'var(--bg3)',borderRadius:10,padding:'1rem',marginBottom:'1rem'}}>
+            {[['Name',selected.name],['Category',selected.category?.name||'—'],['Location',selected.location?.name||'—'],['Status',selected.status_label?.name||'—'],['Assigned to',selected.assigned_to?.name||'Not assigned'],['Cost',`₱${parseFloat((selected.purchase_cost||'0').toString().replace(/,/g,'')).toLocaleString()}`],['Last Audit',selected.custom_fields?.['Last Audit Date']?.value||'—'],['AI Score',getAiScore(selected)]].map(([k,v])=>(
+              <div className="result-row" key={k}><span style={{color:'var(--text2)'}}>{k}</span><span style={{fontWeight:500}}>{v}</span></div>
+            ))}
+            {TELEMETRY[selected.asset_tag]&&<div className="result-row"><span style={{color:'var(--text2)'}}>Health</span><HealthBar score={TELEMETRY[selected.asset_tag].health}/></div>}
+            {selected.status_label?.name?.includes('Maintenance')&&<div style={{marginTop:10,padding:'8px 12px',background:'var(--red-dim)',borderRadius:8,fontSize:13,color:'var(--red)'}}>⚠️ High priority — escalate immediately!</div>}
+          </div>
+          <div style={{display:'flex',gap:10}}>
+            <button className="btn btn-primary" style={{flex:1}} onClick={()=>window.open(`http://snipe-it.test/hardware/${selected.id}`,'_blank')}>View in Snipe-IT</button>
+            <button className="btn" style={{flex:1}} onClick={()=>setSelected(null)}>Close</button>
+          </div>
+        </div>
+      </div>
+    )}
     {modal?.type==='checkout'&&<CheckoutModal asset={modal.asset} users={users} onClose={()=>setModal(null)} onDone={reload} showToast={showToast}/>}
     {modal?.type==='checkin'&&<CheckinModal asset={modal.asset} onClose={()=>setModal(null)} onDone={reload} showToast={showToast}/>}
     {modal?.type==='maintenance'&&<MaintenanceModal asset={modal.asset} onClose={()=>setModal(null)} onDone={reload} showToast={showToast}/>}
@@ -450,7 +469,26 @@ function Dashboard({assets,users,reload,showToast,setPage}){
 
 /* ── Users Page ── */
 function UsersPage({users}){
-  return(<div className="card"><table className="tbl"><thead><tr><th>👤 Employee</th><th>🏢 Department</th><th>💼 Job Title</th><th>🔢 Employee #</th><th>✅ Status</th></tr></thead><tbody>{users.map(u=>(<tr key={u.id}><td><div style={{display:'flex',alignItems:'center',gap:10}}><div className="avatar">{initials(u.name)}</div><span style={{fontWeight:500}}>{u.name}</span></div></td><td style={{color:'var(--text2)',fontSize:13}}>{u.department?.name||'—'}</td><td><span className="badge badge-blue">{u.jobtitle||'—'}</span></td><td><span className="mono">{u.employee_num||'—'}</span></td><td><span className={`badge ${u.activated?'badge-ready':'badge-maint'}`}>{u.activated?'Active':'Inactive'}</span></td></tr>))}</tbody></table></div>);
+  const [selected,setSelected]=useState(null);
+  return(<>
+    <div className="card"><table className="tbl"><thead><tr><th>👤 Employee</th><th>🏢 Department</th><th>💼 Job Title</th><th>🔢 Employee #</th><th>✅ Status</th></tr></thead><tbody>{users.map(u=>(<tr key={u.id} style={{cursor:'pointer'}} onClick={()=>setSelected(u)}><td><div style={{display:'flex',alignItems:'center',gap:10}}><div className="avatar">{initials(u.name)}</div><span style={{fontWeight:500}}>{u.name}</span></div></td><td style={{color:'var(--text2)',fontSize:13}}>{u.department?.name||'—'}</td><td><span className="badge badge-blue">{u.jobtitle||'—'}</span></td><td><span className="mono">{u.employee_num||'—'}</span></td><td><span className={`badge ${u.activated?'badge-ready':'badge-maint'}`}>{u.activated?'Active':'Inactive'}</span></td></tr>))}</tbody></table></div>
+    {selected&&(
+      <div className="modal-overlay" onClick={()=>setSelected(null)}>
+        <div className="modal" onClick={e=>e.stopPropagation()}>
+          <div className="modal-title"><div style={{display:'flex',alignItems:'center',gap:10}}><div className="avatar" style={{width:36,height:36,fontSize:13}}>{initials(selected.name)}</div>{selected.name}</div><span className="modal-close" onClick={()=>setSelected(null)}>✕</span></div>
+          <div style={{background:'var(--bg3)',borderRadius:10,padding:'1rem',marginBottom:'1rem'}}>
+            {[['Username',selected.username||'—'],['Email',selected.email||'—'],['Employee #',selected.employee_num||'—'],['Job Title',selected.jobtitle||'—'],['Department',selected.department?.name||'—'],['Status',selected.activated?'Active':'Inactive']].map(([k,v])=>(
+              <div className="result-row" key={k}><span style={{color:'var(--text2)'}}>{k}</span><span style={{fontWeight:500}}>{v}</span></div>
+            ))}
+          </div>
+          <div style={{display:'flex',gap:10}}>
+            <button className="btn btn-primary" style={{flex:1}} onClick={()=>window.open(`http://snipe-it.test/users/${selected.id}`,'_blank')}>View in Snipe-IT</button>
+            <button className="btn" style={{flex:1}} onClick={()=>setSelected(null)}>Close</button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>);
 }
 
 /* ── Telemetry Page ── */
@@ -459,6 +497,7 @@ function TelemetryPage(){
   const warning=Object.values(TELEMETRY).filter(t=>t.health>=40&&t.health<65).length;
   const healthy=Object.values(TELEMETRY).filter(t=>t.health>=65).length;
   const [filter,setFilter]=useState('all');
+  const [selected,setSelected]=useState(null);
   const filtered=Object.entries(TELEMETRY).filter(([tag,t])=>{
     if(filter==='critical') return t.health<40;
     if(filter==='warning') return t.health>=40&&t.health<65;
@@ -477,7 +516,7 @@ function TelemetryPage(){
         {filter!=='all'&&<button className="btn btn-sm" onClick={()=>setFilter('all')}>Show all</button>}
       </div>
       <table className="tbl"><thead><tr><th>🏷️ Asset Tag</th><th>🔋 Battery</th><th>⚡ CPU</th><th>❤️ Health</th><th>📊 Status</th></tr></thead>
-        <tbody>{filtered.map(([tag,t])=>(<tr key={tag}>
+        <tbody>{filtered.map(([tag,t])=>(<tr key={tag} style={{cursor:'pointer'}} onClick={()=>setSelected({tag,t})}>
           <td><span className="mono">{tag}</span></td>
           <td><div style={{display:'flex',alignItems:'center',gap:8}}><div className="health-bar-bg" style={{width:80}}><div className="health-bar-fill" style={{width:`${t.battery}%`,background:t.battery<20?'#E24B4A':t.battery<50?'#EF9F27':'#1D9E75'}}/></div><span style={{fontSize:11,color:'var(--text2)'}}>{t.battery}%</span></div></td>
           <td><div style={{display:'flex',alignItems:'center',gap:8}}><div className="health-bar-bg" style={{width:80}}><div className="health-bar-fill" style={{width:`${t.cpu}%`,background:t.cpu>80?'#E24B4A':t.cpu>60?'#EF9F27':'#1D9E75'}}/></div><span style={{fontSize:11,color:'var(--text2)'}}>{t.cpu}%</span></div></td>
@@ -486,6 +525,23 @@ function TelemetryPage(){
         </tr>))}</tbody>
       </table>
     </div>
+    {selected&&(
+      <div className="modal-overlay" onClick={()=>setSelected(null)}>
+        <div className="modal" onClick={e=>e.stopPropagation()}>
+          <div className="modal-title"><span className="mono">{selected.tag}</span><span className="modal-close" onClick={()=>setSelected(null)}>✕</span></div>
+          <div style={{background:'var(--bg3)',borderRadius:10,padding:'1rem',marginBottom:'1rem'}}>
+            {[['Asset Tag',selected.tag],['Battery',`${selected.t.battery}%`],['CPU Usage',`${selected.t.cpu}%`],['Health Score',`${selected.t.health}%`],['Status',selected.t.health<40?'🔴 Critical':selected.t.health<65?'🟡 Warning':'🟢 Healthy']].map(([k,v])=>(
+              <div className="result-row" key={k}><span style={{color:'var(--text2)'}}>{k}</span><span style={{fontWeight:500}}>{v}</span></div>
+            ))}
+            <div className="result-row"><span style={{color:'var(--text2)'}}>Health Bar</span><HealthBar score={selected.t.health}/></div>
+          </div>
+          <div style={{display:'flex',gap:10}}>
+            <button className="btn btn-primary" style={{flex:1}} onClick={()=>window.open(`http://snipe-it.test/hardware/bytag/${selected.tag}`,'_blank')}>View in Snipe-IT</button>
+            <button className="btn" style={{flex:1}} onClick={()=>setSelected(null)}>Close</button>
+          </div>
+        </div>
+      </div>
+    )}
   </>);
 }
 
@@ -493,7 +549,10 @@ function TelemetryPage(){
 function QRCodeBox({text,size=100}){const ref=useRef(null);useEffect(()=>{if(!ref.current)return;ref.current.innerHTML='';try{new QRCode(ref.current,{text,width:size,height:size,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});}catch(e){}},[text,size]);return <div ref={ref}/>;}
 
 function QRPage({assets}){
-  const [lookup,setLookup]=useState('');const [result,setResult]=useState(null);const [notFound,setNotFound]=useState(false);
+  const [lookup,setLookup]=useState('');
+  const [result,setResult]=useState(null);
+  const [notFound,setNotFound]=useState(false);
+  const [selected,setSelected]=useState(null);
   const doLookup=()=>{const found=assets.find(a=>(a.asset_tag||'').toUpperCase()===lookup.trim().toUpperCase());found?(setResult(found),setNotFound(false)):(setResult(null),setNotFound(true));};
   return(<>
     <div className="card no-print" style={{maxWidth:520,marginBottom:'1.5rem'}}>
@@ -510,7 +569,31 @@ function QRPage({assets}){
       <span className="card-title">🖨️ QR Labels — {assets.length} assets</span>
       <button className="btn btn-primary btn-sm" onClick={()=>window.print()}>Print all labels</button>
     </div>
-    <div className="qr-grid">{assets.map(a=>(<div className="qr-asset-card" key={a.id}><div className="qr-code-box"><QRCodeBox text={`http://snipe-it.test/hardware/${a.id}`} size={110}/></div><div className="mono" style={{textAlign:'center',fontSize:11}}>{a.asset_tag}</div><div style={{fontSize:13,fontWeight:500,color:'var(--text)',textAlign:'center'}}>{a.name}</div><div style={{fontSize:11,color:'var(--text3)',textAlign:'center'}}>{a.location?.name||'No location'}</div><StatusBadge status={a.status_label?.name}/></div>))}</div>
+    <div className="qr-grid">{assets.map(a=>(<div className="qr-asset-card" key={a.id} style={{cursor:'pointer'}} onClick={()=>setSelected(a)}>
+      <div className="qr-code-box"><QRCodeBox text={`http://snipe-it.test/hardware/${a.id}`} size={110}/></div>
+      <div className="mono" style={{textAlign:'center',fontSize:11}}>{a.asset_tag}</div>
+      <div style={{fontSize:13,fontWeight:500,color:'var(--text)',textAlign:'center'}}>{a.name}</div>
+      <div style={{fontSize:11,color:'var(--text3)',textAlign:'center'}}>{a.location?.name||'No location'}</div>
+      <StatusBadge status={a.status_label?.name}/>
+    </div>))}</div>
+    {selected&&(
+      <div className="modal-overlay" onClick={()=>setSelected(null)}>
+        <div className="modal" onClick={e=>e.stopPropagation()}>
+          <div className="modal-title"><span className="mono">{selected.asset_tag}</span><span className="modal-close" onClick={()=>setSelected(null)}>✕</span></div>
+          <div style={{background:'var(--bg3)',borderRadius:10,padding:'1rem',marginBottom:'1rem'}}>
+            {[['Name',selected.name],['Category',selected.category?.name||'—'],['Location',selected.location?.name||'—'],['Status',selected.status_label?.name||'—'],['Assigned to',selected.assigned_to?.name||'Not assigned'],['Cost',`₱${parseFloat((selected.purchase_cost||'0').toString().replace(/,/g,'')).toLocaleString()}`]].map(([k,v])=>(
+              <div className="result-row" key={k}><span style={{color:'var(--text2)'}}>{k}</span><span style={{fontWeight:500}}>{v}</span></div>
+            ))}
+            {TELEMETRY[selected.asset_tag]&&<div className="result-row"><span style={{color:'var(--text2)'}}>Health</span><HealthBar score={TELEMETRY[selected.asset_tag].health}/></div>}
+            {selected.status_label?.name?.includes('Maintenance')&&<div style={{marginTop:10,padding:'8px 12px',background:'var(--red-dim)',borderRadius:8,fontSize:13,color:'var(--red)'}}>⚠️ High priority — escalate immediately!</div>}
+          </div>
+          <div style={{display:'flex',gap:10}}>
+            <button className="btn btn-primary" style={{flex:1}} onClick={()=>window.open(`http://snipe-it.test/hardware/${selected.id}`,'_blank')}>View in Snipe-IT</button>
+            <button className="btn" style={{flex:1}} onClick={()=>setSelected(null)}>Close</button>
+          </div>
+        </div>
+      </div>
+    )}
   </>);
 }
 

@@ -10,7 +10,7 @@
     :root{--bg:#0F1117;--bg2:#181B24;--bg3:#1E2230;--border:rgba(255,255,255,0.08);--text:#E8EAF0;--text2:#8B90A0;--text3:#555B6E;--teal:#1D9E75;--teal-dim:rgba(29,158,117,0.15);--red:#E24B4A;--red-dim:rgba(226,75,74,0.15);--amber:#EF9F27;--radius:12px}
     body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:480px;margin:0 auto;padding:1rem}
     .header{display:flex;align-items:center;gap:10px;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:0.5px solid var(--border)}
-    .logo{width:32px;height:32px;border-radius:8px;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .logo{width:44px;height:44px;border-radius:8px;background:none;display:flex;align-items:center;justify-content:center;font-size:0px;flex-shrink:0;background-image:url(logo.png);background-size:cover;background-position:center}
     .header h1{font-size:16px;font-weight:600}
     .header p{font-size:12px;color:var(--text2)}
     .tabs{display:flex;background:var(--bg2);border-radius:var(--radius);padding:4px;gap:4px;margin-bottom:1.25rem;border:0.5px solid var(--border)}
@@ -138,8 +138,8 @@ function showAsset(a,cid){
       ${a.assigned_to?`<div class="rrow"><span class="rlabel">Assigned to</span><span class="rval">${a.assigned_to.name||'—'}</span></div>`:''}
     </div>
     ${ai==='High'?`<div class="alert a-err">⚠️ High priority — escalate immediately!</div>`:`<div class="alert a-ok">✅ Asset verified.</div>`}
-    <button class="abtn a-audit" onclick="logScan('${a.asset_tag}','${a.location?.name||''}')">📋 Log QR Audit Scan</button>
-    ${!a.assigned_to?`<button class="abtn a-teal" onclick="alert('Open Snipe-IT to complete checkout.')">📤 Check Out</button>`:`<button class="abtn a-amber" onclick="alert('Open Snipe-IT to complete check-in.')">📥 Check In</button>`}
+    <button class="abtn a-audit" onclick="logScan('${a.asset_tag}','${a.location?.name||"No location"}')">📋 Log QR Audit Scan</button>
+    ${!a.assigned_to?`<button class="abtn a-teal" onclick="window.open('http://snipe-it.test/hardware/${a.id}/checkout','_blank')">📤 Check Out</button>`:`<button class="abtn a-amber" onclick="window.open('http://snipe-it.test/hardware/${a.id}/checkin','_blank')">📥 Check In</button>`}
   `;
 }
 
@@ -181,7 +181,7 @@ async function startCam(){
       document.getElementById('r-scan').innerHTML=`<div class="card"><span class="spin"></span>Looking up ${tag}...</div>`;
       const asset=await fetch(`${PROXY}/api/v1/${endpoint}`,{headers:{'Authorization':'Bearer any','Accept':'application/json'}}).then(r=>r.ok?r.json():null).catch(()=>null);
       showAsset(asset,'r-scan');
-      addHist(tag,'Camera scan','#1D9E75');
+      addHist(asset?.asset_tag||raw,'Camera scan','#1D9E75');
     },()=>{});
   }catch(e){
     document.getElementById('r-scan').innerHTML=`<div class="alert a-err">❌ Camera error: ${e.message||e}<br>Use Manual tab instead.</div>`;
