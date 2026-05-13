@@ -1167,7 +1167,20 @@ function App(){
 
   if(!token)return <TokenGate onSave={t=>{setToken(t);}}/>;
 
-  const nav=[{id:'licenses',label:'Licenses',icon:'📄'}, {id:'audit',label:'Audit Trail',icon:'📝'}, {id:'analytics',label:'Analytics',icon:'📈'}, {id:'disposal',label:'Disposal',icon:'🗑️'}, {id:'acknowledgments',label:'Acknowledgments',icon:'✅'}, {id:'lms',label:'LMS Schedule',icon:'📅'},{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'assets',label:'Assets',icon:'🖥️'},{id:'telemetry',label:'Telemetry',icon:'📡'},{id:'users',label:'Staff',icon:'👨‍💼'},{id:'requests',label:'Requests',icon:'📝'},{id:'qr',label:'QR Labels',icon:'🔲'}];
+  const nav=[
+  {id:'dashboard',label:'Dashboard',icon:'📊'},
+  {id:'assets',label:'Assets',icon:'🖥️'},
+  {id:'telemetry',label:'Telemetry',icon:'📡'},
+  {id:'users',label:'Staff',icon:'👨‍💼'},
+  {id:'requests',label:'Requests',icon:'📝'},
+  {id:'licenses',label:'Licenses',icon:'📄'},
+  {id:'audit',label:'Audit Trail',icon:'📝'},
+  {id:'analytics',label:'Analytics',icon:'📈'},
+  {id:'disposal',label:'Disposal',icon:'🗑️'},
+  {id:'acknowledgments',label:'Acknowledgments',icon:'✅'},
+  {id:'lms',label:'LMS Schedule',icon:'📅'},
+  {id:'qr',label:'QR Labels',icon:'🔲'},
+  ];
   const titles={dashboard:'Dashboard',assets:'Assets',telemetry:'Telemetry',users:'Staff',qr:'QR Labels'};
   const subs={dashboard:'Live data — Snipe-IT + MongoDB + InfluxDB',assets:'Full inventory with checkout, checkin, maintenance & location',telemetry:'Live device health from InfluxDB',users:'Synced from HRIS',qr:'Generate & print QR labels'};
 
