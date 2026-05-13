@@ -1,10 +1,13 @@
+<p align="center">
+  <img src="logo.png" width="120" alt="Ascendia Logo"/>
+</p>
 # Ascendia Academic Institution Philippines
 ## IT Asset Management System
 ### MSIT Capstone — Technology Architecture Implementation
 
 ---
 
-## 🏛️ Project Overview
+## Project Overview
 
 A complete enterprise-grade IT Asset Management System built for Ascendia Academic Institution Philippines using Snipe-IT as the core platform, extended with AI-assisted maintenance scoring, polyglot database persistence, a fully interactive live dashboard, and a mobile QR scanner.
 
