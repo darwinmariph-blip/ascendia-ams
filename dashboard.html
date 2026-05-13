@@ -715,7 +715,9 @@ function LicensePage({showToast}){
 
   const getExpStatus=(exp)=>{
     if(!exp)return{label:'No expiry',cls:'badge-blue'};
-    const days=(new Date(exp)-new Date())/86400000;
+    const expDate=exp?.date||exp;
+    if(!expDate)return{label:'No expiry',cls:'badge-blue'};
+    const days=(new Date(expDate)-new Date())/86400000;
     if(days<0)return{label:'Expired',cls:'badge-high'};
     if(days<30)return{label:`${Math.round(days)}d left`,cls:'badge-high'};
     if(days<90)return{label:`${Math.round(days)}d left`,cls:'badge-medium'};
@@ -723,10 +725,10 @@ function LicensePage({showToast}){
   };
 
   return(<>
-    <div className="metrics" style={{gridTemplateColumns:'repeat(5,1fr)',marginBottom:14}}>
+    <div className="metrics" style={{gridTemplateColumns:'repeat(6,1fr)',marginBottom:14}}>
       <div className="metric-card"><div className="metric-top"><div className="metric-icon teal">📄</div></div><div className="metric-val">{licenses.length}</div><div className="metric-label">Total licenses</div></div>
       <div className="metric-card"><div className="metric-top"><div className="metric-icon blue">💺</div></div><div className="metric-val">{licenses.reduce((s,l)=>s+(l.seats||0),0)}</div><div className="metric-label">Total seats</div></div>
-      <div className={`metric-card ${licenses.some(l=>{const d=(new Date(l.expiration_date)-new Date())/86400000;return d<30&&d>0;})?'alert':''}`}><div className="metric-top"><div className="metric-icon amber">⏰</div></div><div className="metric-val">{licenses.filter(l=>{const d=(new Date(l.expiration_date)-new Date())/86400000;return d<30&&d>0;}).length}</div><div className="metric-label">Expiring soon</div></div>
+      <div className={`metric-card ${licenses.some(l=>{const exp=l.expiration_date?.date||l.expiration_date;const d=(new Date(exp)-new Date())/86400000;return d<30&&d>0;})?'alert':''}`}><div className="metric-top"><div className="metric-icon amber">⏰</div></div><div className="metric-val">{licenses.filter(l=>{const exp=l.expiration_date?.date||l.expiration_date;const d=(new Date(exp)-new Date())/86400000;return d<30&&d>0;}).length}</div><div className="metric-label">Expiring soon</div></div>
     </div>
     <div className="card">
       <div className="card-head"><span className="card-title">📄 Software Licenses</span><button className="btn btn-primary btn-sm" onClick={()=>window.open('http://snipe-it.test/licenses/create','_blank')}>+ New License</button></div>
@@ -736,7 +738,7 @@ function LicensePage({showToast}){
           <tbody>{licenses.map(l=>{
             const used=l.seats-(l.remaining_seats||l.seats);
             const util=l.seats>0?Math.round(used/l.seats*100):0;
-            const exp=getExpStatus(l.expiration_date);
+            const exp=getExpStatus(l.expiration_date?.date||l.expiration_date);
             return(<tr key={l.id} style={{cursor:'pointer'}} onClick={()=>setSelected(l)}>
               <td style={{fontWeight:500}}>{l.name}</td>
               <td>{l.seats||0}</td>
@@ -759,8 +761,8 @@ function LicensePage({showToast}){
         <div className="modal" onClick={e=>e.stopPropagation()}>
           <div className="modal-title">{selected.name}<span className="modal-close" onClick={()=>setSelected(null)}>✕</span></div>
           <div style={{background:'var(--bg3)',borderRadius:10,padding:'1rem',marginBottom:'1rem'}}>
-            {[['License Name',selected.name],['Total Seats',selected.seats],['Remaining Seats',selected.remaining_seats],['Purchase Cost',`₱${parseFloat((selected.purchase_cost||'0').toString().replace(/,/g,'')).toLocaleString()}`],['Expiry Date',selected.expiration_date||'—'],['Notes',selected.notes||'—']].map(([k,v])=>(
-              <div className="result-row" key={k}><span style={{color:'var(--text2)'}}>{k}</span><span style={{fontWeight:500}}>{v}</span></div>
+            {[['License Name',selected.name],['Total Seats',selected.seats],['Remaining Seats',selected.remaining_seats||selected.free_seats_count],['Purchase Cost',`₱${parseFloat((selected.purchase_cost||'0').toString().replace(/,/g,'')).toLocaleString()}`],['Expiry Date',selected.expiration_date?.date||selected.expiration_date||'—'],['Category',selected.category?.name||'—'],['Notes',selected.notes||'—']].map(([k,v])=>(
+              <div className="result-row" key={k}><span style={{color:'var(--text2)'}}>{k}</span><span style={{fontWeight:500}}>{String(v)}</span></div>
             ))}
           </div>
           <div style={{display:'flex',gap:10}}>
@@ -1111,6 +1113,13 @@ function LMSPage({assets}){
   const [lmsView,setLmsView]=useState('all');
   const tomorrowName=dayNames[(now.getDay()+1)%7];
   const isTomorrow=(day)=>day.split('/').some(d=>tomorrowName.includes(d.trim()));
+  const isDone=(day,time)=>{
+    const dayMatch=day.split('/').some(d=>today.includes(d.trim()));
+    if(!dayMatch)return false;
+    const end=time.split('-')[1];
+    const[h,m]=end.split(':');
+    return currentTime>parseInt(h)*100+parseInt(m);
+  };
   const getLabAssets=(room)=>assets.filter(a=>(a.location?.name||'')===room);
   const getReadiness=(room,needed)=>{
     const roomAssets=getLabAssets(room);
@@ -1124,6 +1133,7 @@ function LMSPage({assets}){
       <div className={`metric-card ${schedules.filter(s=>s.critical).length>0?'alert':''}`} style={{cursor:'pointer'}} onClick={()=>setLmsView('critical')}><div className="metric-top"><div className="metric-icon red">⚠️</div></div><div className="metric-val">{schedules.filter(s=>s.critical).length}</div><div className="metric-label">Critical period classes</div></div>
       <div className="metric-card" style={{cursor:'pointer'}} onClick={()=>setLmsView('rooms')}><div className="metric-top"><div className="metric-icon teal">🏫</div></div><div className="metric-val">{[...new Set(schedules.filter(s=>isActive(s.day,s.time)).map(s=>s.room))].length}</div><div className="metric-label">Rooms in use now</div></div>
       <div className="metric-card" style={{cursor:'pointer'}} onClick={()=>setLmsView('upcoming')}><div className="metric-top"><div className="metric-icon amber">⏰</div></div><div className="metric-val">{schedules.filter(s=>isLaterToday(s.day,s.time)).length}</div><div className="metric-label">Upcoming today</div></div>
+      <div className="metric-card" style={{cursor:'pointer'}} onClick={()=>setLmsView('done')}><div className="metric-top"><div className="metric-icon teal">✔️</div></div><div className="metric-val">{schedules.filter(s=>isDone(s.day,s.time)).length}</div><div className="metric-label">Done today</div></div>
       <div className="metric-card" style={{cursor:'pointer'}} onClick={()=>setLmsView('tomorrow')}><div className="metric-top"><div className="metric-icon blue">📆</div></div><div className="metric-val">{schedules.filter(s=>isTomorrow(s.day)).length}</div><div className="metric-label">Tomorrow's classes</div></div>
     </div>
     {lmsView==='rooms'&&(
@@ -1172,6 +1182,25 @@ function LMSPage({assets}){
         }
       </div>
     )}
+    {lmsView==='done'&&(
+      <div className="card" style={{marginBottom:14}}>
+        <div className="card-head"><span className="card-title">✔️ Completed Classes Today</span><button className="btn btn-sm" onClick={()=>setLmsView('all')}>Show all</button></div>
+        {schedules.filter(s=>isDone(s.day,s.time)).length===0
+          ?<div style={{color:'var(--text3)',fontSize:13,padding:'0.5rem 0'}}>No completed classes today.</div>
+          :schedules.filter(s=>isDone(s.day,s.time)).map(s=>(
+            <div key={s.id} style={{padding:'10px 0',borderBottom:'0.5px solid var(--border)',opacity:0.7}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <div>
+                  <div style={{fontWeight:500,fontSize:14}}>{s.course}</div>
+                  <div style={{fontSize:12,color:'var(--text2)',marginTop:2}}>{s.time} • {s.instructor} • {s.room}</div>
+                </div>
+                <span className="badge" style={{background:'var(--bg3)',color:'var(--text3)'}}>✔️ Done</span>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    )}
     {lmsView==='tomorrow'&&(
       <div className="card" style={{marginBottom:14}}>
         <div className="card-head"><span className="card-title">📆 Tomorrow's Schedule — {tomorrowName}</span><button className="btn btn-sm" onClick={()=>setLmsView('all')}>Show all</button></div>
@@ -1213,7 +1242,8 @@ function LMSPage({assets}){
               <div style={{fontSize:12,color:'var(--text2)',marginTop:4}}>{s.day} • {s.time} • {s.instructor} • {s.students} students</div>
             </div>
             <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
-              {isActive(s.day,s.time)&&<span className="badge badge-ready">🟢 Active Now</span>}
+              {isDone(s.day,s.time)&&<span className="badge" style={{background:'var(--bg3)',color:'var(--text3)'}}>✔️ Done</span>}
+              {!isDone(s.day,s.time)&&isActive(s.day,s.time)&&<span className="badge badge-ready">🟢 Active Now</span>}
               {isLaterToday(s.day,s.time)&&<span className="badge badge-blue">📅 Later Today</span>}
               {s.critical&&<span className="badge badge-high">🔴 Critical Period</span>}
               <span className="badge" style={{background:'var(--bg3)',color:'var(--text2)'}}>{s.room}</span>
@@ -1307,7 +1337,7 @@ function App(){
         <div className="topbar-right">
           {loading&&<Spinner/>}
           {error&&<span style={{fontSize:12,color:'var(--red)'}}>{error}</span>}
-          <span style={{fontSize:12,color:'var(--text3)'}}>{new Date().toLocaleDateString('en-PH',{dateStyle:'medium'})}</span>
+          <span style={{fontSize:20,fontWeight:500,color:'var(--text)'}}>{new Date().toLocaleDateString('en-PH',{dateStyle:'medium'})}</span>
           {page==='users'&&<button className="btn btn-primary" onClick={()=>window.open('http://snipe-it.test/users/create','_blank')}>+ Staff</button>}
           
         </div>
