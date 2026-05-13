@@ -565,7 +565,8 @@ function App(){
           {loading&&<Spinner/>}
           {error&&<span style={{fontSize:12,color:'var(--red)'}}>{error}</span>}
           <span style={{fontSize:12,color:'var(--text3)'}}>{new Date().toLocaleDateString('en-PH',{dateStyle:'medium'})}</span>
-          <button className="btn btn-primary" onClick={()=>window.open('http://snipe-it.test/hardware/create','_blank')}>+ New Asset</button>
+          {page==='users'&&<button className="btn btn-primary" onClick={()=>window.open('http://snipe-it.test/users/create','_blank')}>+ Staff</button>}
+          
         </div>
       </div>
       {page==='dashboard'&&<Dashboard assets={assets} users={users} reload={loadData} showToast={showToast} setPage={setPage}/>}

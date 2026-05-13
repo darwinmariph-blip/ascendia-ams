@@ -94,7 +94,7 @@
 </div>
 
 <script>
-const PROXY='http://192.168.1.158:8888';
+const PROXY='http://localhost:8888';
 let qr=null, history=JSON.parse(localStorage.getItem('ams_hist')||'[]');
 
 function sw(t){
@@ -174,9 +174,12 @@ async function startCam(){
       await qr.stop();
       document.getElementById('b-start').style.display='inline-block';
       document.getElementById('b-stop').style.display='none';
-      const tag=decoded.split('/').pop();
+      const raw=decoded.split('/').pop();
+      const tag=raw.startsWith('AAI')?raw:null;
+      const id=!isNaN(raw)?raw:null;
+      const endpoint=tag?`hardware/bytag/${encodeURIComponent(tag)}`:`hardware/${id}`;
       document.getElementById('r-scan').innerHTML=`<div class="card"><span class="spin"></span>Looking up ${tag}...</div>`;
-      const asset=await getAsset(tag);
+      const asset=await fetch(`${PROXY}/api/v1/${endpoint}`,{headers:{'Authorization':'Bearer any','Accept':'application/json'}}).then(r=>r.ok?r.json():null).catch(()=>null);
       showAsset(asset,'r-scan');
       addHist(tag,'Camera scan','#1D9E75');
     },()=>{});
