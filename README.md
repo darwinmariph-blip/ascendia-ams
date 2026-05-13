@@ -212,4 +212,4 @@ Location: ~/ascendia-ams/backups/ (keeps last 7)
 ---
 
 *Ascendia Academic Institution Philippines — IT Asset Management System*  
-*Implemented by Darwin Mari — MSIT Capstone 2026*
+*Implemented by Group 1 — MSIT 631 Advanced Systems Design and Implementation*
