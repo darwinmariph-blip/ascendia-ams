@@ -160,7 +160,7 @@ function HealthBar({score}){
 
 function getAiScore(a){return (a.custom_fields||{})['AI Priority Score']?.value||'Unscored';}
 
-const TELEMETRY={'AAI-2026-00001':{health:9,battery:8,cpu:94},'AAI-2026-00002':{health:66,battery:81,cpu:32},'AAI-2026-00003':{health:73,battery:87,cpu:33},'AAI-2026-00004':{health:82,battery:100,cpu:15},'AAI-2026-00005':{health:79,battery:100,cpu:19},'AAI-2026-00006':{health:76,battery:94,cpu:14},'AAI-2026-00007':{health:68,battery:69,cpu:12},'AAI-2026-00008':{health:81,battery:100,cpu:28},'AAI-2026-00009':{health:83,battery:100,cpu:24}};
+const TELEMETRY={'AAI-2026-00001':{health:9,battery:8,cpu:94},'AAI-2026-00002':{health:66,battery:81,cpu:32},'AAI-2026-00003':{health:73,battery:87,cpu:33},'AAI-2026-00004':{health:82,battery:100,cpu:15},'AAI-2026-00005':{health:79,battery:100,cpu:19},'AAI-2026-00006':{health:76,battery:94,cpu:14},'AAI-2026-00007':{health:68,battery:69,cpu:12},'AAI-2026-00008':{health:81,battery:100,cpu:28},'AAI-2026-00009':{health:83,battery:100,cpu:24},'AAI-2026-00054':{health:74,battery:100,cpu:18},'AAI-2026-00055':{health:72,battery:85,cpu:22},'AAI-2026-00056':{health:70,battery:82,cpu:25},'AAI-2026-00057':{health:76,battery:88,cpu:20},'AAI-2026-00058':{health:82,battery:90,cpu:15},'AAI-2026-00059':{health:78,battery:86,cpu:19},'AAI-2026-00060':{health:75,battery:84,cpu:21},'AAI-2026-00061':{health:75,battery:83,cpu:22},'AAI-2026-00062':{health:78,battery:87,cpu:19},'AAI-2026-00063':{health:77,battery:86,cpu:20},'AAI-2026-00064':{health:70,battery:80,cpu:26},'AAI-2026-00065':{health:76,battery:85,cpu:21},'AAI-2026-00066':{health:81,battery:90,cpu:16},'AAI-2026-00067':{health:71,battery:81,cpu:25},'AAI-2026-00068':{health:81,battery:90,cpu:16},'AAI-2026-00069':{health:73,battery:83,cpu:23},'AAI-2026-00070':{health:80,battery:89,cpu:17},'AAI-2026-00071':{health:77,battery:86,cpu:20},'AAI-2026-00072':{health:80,battery:89,cpu:17},'AAI-2026-00073':{health:84,battery:92,cpu:14},'AAI-2026-00074':{health:80,battery:89,cpu:17},'AAI-2026-00075':{health:76,battery:85,cpu:21},'AAI-2026-00076':{health:82,battery:91,cpu:15},'AAI-2026-00077':{health:83,battery:91,cpu:14},'AAI-2026-00078':{health:73,battery:83,cpu:23},'AAI-2026-00079':{health:77,battery:86,cpu:20},'AAI-2026-00080':{health:70,battery:80,cpu:26},'AAI-2026-00081':{health:76,battery:85,cpu:21},'AAI-2026-00082':{health:83,battery:91,cpu:14},'AAI-2026-00083':{health:80,battery:89,cpu:17},'AAI-2026-00084':{health:83,battery:91,cpu:14},'AAI-2026-00085':{health:83,battery:91,cpu:14},'AAI-2026-00086':{health:85,battery:100,cpu:12},'AAI-2026-00087':{health:83,battery:100,cpu:14},'AAI-2026-00088':{health:87,battery:100,cpu:10},'AAI-2026-00089':{health:92,battery:100,cpu:6},'AAI-2026-00090':{health:86,battery:100,cpu:11},'AAI-2026-00091':{health:79,battery:88,cpu:18},'AAI-2026-00092':{health:76,battery:85,cpu:21},'AAI-2026-00093':{health:87,battery:100,cpu:10},'AAI-2026-00094':{health:82,battery:100,cpu:15},'AAI-2026-00095':{health:75,battery:84,cpu:21},'AAI-2026-00096':{health:75,battery:84,cpu:21},'AAI-2026-00097':{health:87,battery:100,cpu:10},'AAI-2026-00098':{health:80,battery:100,cpu:17},'AAI-2026-00099':{health:80,battery:100,cpu:17},'AAI-2026-00100':{health:79,battery:100,cpu:18},'AAI-2026-00101':{health:72,battery:82,cpu:24},'AAI-2026-00102':{health:77,battery:86,cpu:20},'AAI-2026-00103':{health:78,battery:87,cpu:19},'AAI-2026-00104':{health:75,battery:84,cpu:21},'AAI-2026-00105':{health:86,battery:100,cpu:11},'AAI-2026-00106':{health:84,battery:100,cpu:13},'AAI-2026-00107':{health:84,battery:100,cpu:13},'AAI-2026-00108':{health:87,battery:100,cpu:10},'AAI-2026-00109':{health:82,battery:100,cpu:15},'AAI-2026-00110':{health:84,battery:100,cpu:13},'AAI-2026-00111':{health:85,battery:100,cpu:12}};
 
 /* ── Checkout Modal ── */
 function CheckoutModal({asset,users,onClose,onDone,showToast}){
@@ -356,12 +356,12 @@ function TokenGate({onSave}){
 }
 
 /* ── Assets Page ── */
-function AssetsPage({assets,users,locations,reload,showToast}){
+function AssetsPage({assets,users,locations,reload,showToast,initialFilter}){
   const [search,setSearch]=useState('');
-  const [filter,setFilter]=useState('All');
+  const [filter,setFilter]=useState(initialFilter||'All');useEffect(()=>{if(localStorage.getItem('filterHigh')==='1'){setFilter('High');localStorage.removeItem('filterHigh');}}, []);
   const [modal,setModal]=useState(null); // {type, asset}
-  const cats=['All',...new Set(assets.map(a=>a.category?.name).filter(Boolean))];
-  const filtered=assets.filter(a=>(filter==='All'||a.category?.name===filter)&&((a.name||'').toLowerCase().includes(search.toLowerCase())||(a.asset_tag||'').includes(search)));
+  const cats=['All','High',...new Set(assets.map(a=>a.category?.name).filter(Boolean))];
+  const filtered=assets.filter(a=>(filter==='All'||(filter==='High'&&getAiScore(a)==='High')||a.category?.name===filter)&&((a.name||'').toLowerCase().includes(search.toLowerCase())||(a.asset_tag||'').includes(search)));
   return(<>
     <div style={{display:'flex',gap:10,marginBottom:'1.25rem',flexWrap:'wrap',alignItems:'center'}} className="no-print">
       <input placeholder="Search by name or tag..." value={search} onChange={e=>setSearch(e.target.value)} style={{padding:'8px 14px',borderRadius:10,border:'1px solid var(--border)',background:'var(--bg2)',color:'var(--text)',fontFamily:'DM Sans,sans-serif',fontSize:13,width:260}}/>
@@ -369,7 +369,7 @@ function AssetsPage({assets,users,locations,reload,showToast}){
     </div>
     <div className="card">
       <table className="tbl">
-        <thead><tr><th>Asset Tag</th><th>Name</th><th>Location</th><th>Status</th><th>AI</th><th>Health</th><th>Actions</th></tr></thead>
+        <thead><tr><th>🏷️ Tag</th><th>💻 Name</th><th>📍 Location</th><th>🔄 Status</th><th>🤖 AI</th><th>❤️ Health</th><th>💰 Cost</th><th>⚙️ Actions</th></tr></thead>
         <tbody>{filtered.map(a=>{
           const t=TELEMETRY[a.asset_tag]||{};
           const isDeployed=!!a.assigned_to;
@@ -380,6 +380,7 @@ function AssetsPage({assets,users,locations,reload,showToast}){
             <td><StatusBadge status={a.status_label?.name}/>{isDeployed&&<div style={{fontSize:11,color:'var(--text2)',marginTop:2}}>{a.assigned_to.name}</div>}</td>
             <td><AiBadge level={getAiScore(a)}/></td>
             <td style={{minWidth:100}}>{t.health!==undefined?<HealthBar score={t.health}/>:<span style={{color:'var(--text3)',fontSize:11}}>—</span>}</td>
+            <td><span style={{fontSize:12,color:'var(--text2)'}}>₱{parseFloat((a.purchase_cost||'0').toString().replace(/,/g,'')).toLocaleString()}</span></td>
             <td>
               <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
                 {!isDeployed
@@ -402,11 +403,11 @@ function AssetsPage({assets,users,locations,reload,showToast}){
 }
 
 /* ── Dashboard ── */
-function Dashboard({assets,users,reload,showToast}){
+function Dashboard({assets,users,reload,showToast,setPage}){
   const catRef=useRef(null);const poRef=useRef(null);const healthRef=useRef(null);
   const catInst=useRef(null);const poInst=useRef(null);const healthInst=useRef(null);
   const highCount=assets.filter(a=>getAiScore(a)==='High').length;
-  const totalValue=assets.reduce((s,a)=>s+(parseFloat((a.purchase_cost||'0').toString().replace(',',''))||0),0);
+  const totalValue=assets.reduce((s,a)=>s+(parseFloat((a.purchase_cost||'0').toString().replace(/,/g,''))||0),0);
   const cats={};assets.forEach(a=>{const c=a.category?.name||'Other';cats[c]=(cats[c]||0)+1;});
   useEffect(()=>{
     if(!catRef.current||!Object.keys(cats).length)return;
@@ -421,11 +422,11 @@ function Dashboard({assets,users,reload,showToast}){
   },[]);
   return(<>
     <div className="metrics">
-      <div className="metric-card"><div className="metric-top"><div className="metric-icon teal">📦</div><span style={{fontSize:11,color:'var(--teal)'}}>live</span></div><div className="metric-val">{assets.length}</div><div className="metric-label">Total assets</div></div>
-      <div className="metric-card"><div className="metric-top"><div className="metric-icon blue">👥</div></div><div className="metric-val">{users.length}</div><div className="metric-label">Staff synced</div></div>
-      <div className={`metric-card ${highCount>0?'alert':''}`}><div className="metric-top"><div className="metric-icon red">⚠️</div></div><div className={`metric-val ${highCount>0?'red':''}`}>{highCount}</div><div className="metric-label">High priority (AI)</div></div>
-      <div className="metric-card"><div className="metric-top"><div className="metric-icon amber">💰</div></div><div className="metric-val">₱{totalValue>=1000?Math.round(totalValue/1000)+'K':Math.round(totalValue)}</div><div className="metric-label">Inventory value</div></div>
-    </div>
+  <div className="metric-card" style={{cursor:'pointer'}} onClick={()=>setPage('assets')}><div className="metric-top"><div className="metric-icon teal">📦</div><span style={{fontSize:11,color:'var(--teal)'}}>live</span></div><div className="metric-val">{assets.length}</div><div className="metric-label">Total assets</div></div>
+  <div className="metric-card" style={{cursor:"pointer"}} onClick={()=>setPage("users")}><div className="metric-top"><div className="metric-icon blue">👥</div></div><div className="metric-val">{users.length}</div><div className="metric-label">Staff synced</div></div>
+  <div className={`metric-card ${highCount>0?'alert':''}`} style={{cursor:'pointer'}} onClick={()=>{localStorage.setItem('filterHigh','1');setPage('assets');}}><div className="metric-top"><div className="metric-icon red">⚠️</div></div><div className={`metric-val ${highCount>0?'red':''}`}>{highCount}</div><div className="metric-label">High priority (AI)</div></div>
+  <div className="metric-card" style={{cursor:"pointer"}} onClick={()=>setPage('assets')}><div className="metric-top"><div className="metric-icon amber">💰</div></div><div className="metric-val">₱{totalValue>=1000?Math.round(totalValue/1000)+'K':Math.round(totalValue)}</div><div className="metric-label">Inventory value</div></div>
+  </div>
     <div className="grid3">
       <div className="card">
         <div className="card-head"><span className="card-title">Recent Assets</span></div>
@@ -449,25 +450,39 @@ function Dashboard({assets,users,reload,showToast}){
 
 /* ── Users Page ── */
 function UsersPage({users}){
-  return(<div className="card"><table className="tbl"><thead><tr><th>Employee</th><th>Department</th><th>Job Title</th><th>Employee #</th><th>Status</th></tr></thead><tbody>{users.map(u=>(<tr key={u.id}><td><div style={{display:'flex',alignItems:'center',gap:10}}><div className="avatar">{initials(u.name)}</div><span style={{fontWeight:500}}>{u.name}</span></div></td><td style={{color:'var(--text2)',fontSize:13}}>{u.department?.name||'—'}</td><td><span className="badge badge-blue">{u.jobtitle||'—'}</span></td><td><span className="mono">{u.employee_num||'—'}</span></td><td><span className={`badge ${u.activated?'badge-ready':'badge-maint'}`}>{u.activated?'Active':'Inactive'}</span></td></tr>))}</tbody></table></div>);
+  return(<div className="card"><table className="tbl"><thead><tr><th>👤 Employee</th><th>🏢 Department</th><th>💼 Job Title</th><th>🔢 Employee #</th><th>✅ Status</th></tr></thead><tbody>{users.map(u=>(<tr key={u.id}><td><div style={{display:'flex',alignItems:'center',gap:10}}><div className="avatar">{initials(u.name)}</div><span style={{fontWeight:500}}>{u.name}</span></div></td><td style={{color:'var(--text2)',fontSize:13}}>{u.department?.name||'—'}</td><td><span className="badge badge-blue">{u.jobtitle||'—'}</span></td><td><span className="mono">{u.employee_num||'—'}</span></td><td><span className={`badge ${u.activated?'badge-ready':'badge-maint'}`}>{u.activated?'Active':'Inactive'}</span></td></tr>))}</tbody></table></div>);
 }
 
 /* ── Telemetry Page ── */
 function TelemetryPage(){
+  const critical=Object.values(TELEMETRY).filter(t=>t.health<40).length;
+  const warning=Object.values(TELEMETRY).filter(t=>t.health>=40&&t.health<65).length;
+  const healthy=Object.values(TELEMETRY).filter(t=>t.health>=65).length;
+  const [filter,setFilter]=useState('all');
+  const filtered=Object.entries(TELEMETRY).filter(([tag,t])=>{
+    if(filter==='critical') return t.health<40;
+    if(filter==='warning') return t.health>=40&&t.health<65;
+    if(filter==='healthy') return t.health>=65;
+    return true;
+  });
   return(<>
     <div className="metrics" style={{gridTemplateColumns:'repeat(3,1fr)'}}>
-      <div className="metric-card alert"><div className="metric-top"><div className="metric-icon red">🔴</div></div><div className="metric-val red">1</div><div className="metric-label">Critical devices</div></div>
-      <div className="metric-card"><div className="metric-top"><div className="metric-icon amber">🟡</div></div><div className="metric-val">0</div><div className="metric-label">Warning devices</div></div>
-      <div className="metric-card"><div className="metric-top"><div className="metric-icon teal">🟢</div></div><div className="metric-val">8</div><div className="metric-label">Healthy devices</div></div>
+      <div className={`metric-card ${critical>0?'alert':''}`} style={{cursor:'pointer'}} onClick={()=>setFilter(filter==='critical'?'all':'critical')}><div className="metric-top"><div className="metric-icon red">🔴</div></div><div className={`metric-val ${critical>0?'red':''}`}>{critical}</div><div className="metric-label">Critical devices</div></div>
+      <div className="metric-card" style={{cursor:'pointer',outline:filter==='warning'?'2px solid var(--amber)':''}} onClick={()=>setFilter(filter==='warning'?'all':'warning')}><div className="metric-top"><div className="metric-icon amber">🟡</div></div><div className="metric-val">{warning}</div><div className="metric-label">Warning devices</div></div>
+      <div className="metric-card" style={{cursor:'pointer',outline:filter==='healthy'?'2px solid var(--teal)':''}} onClick={()=>setFilter(filter==='healthy'?'all':'healthy')}><div className="metric-top"><div className="metric-icon teal">🟢</div></div><div className="metric-val">{healthy}</div><div className="metric-label">Healthy devices</div></div>
     </div>
-    <div className="card"><div className="card-head"><span className="card-title">📡 Live telemetry</span></div>
-      <table className="tbl"><thead><tr><th>Asset Tag</th><th>Battery</th><th>CPU</th><th>Health</th><th>Status</th></tr></thead>
-        <tbody>{Object.entries(TELEMETRY).map(([tag,t])=>(<tr key={tag}>
+    <div className="card" id="telemetry-table">
+      <div className="card-head">
+        <span className="card-title">📡 Live telemetry {filter!=='all'&&<span className="badge badge-blue" style={{marginLeft:8,textTransform:'capitalize'}}>{filter} only</span>}</span>
+        {filter!=='all'&&<button className="btn btn-sm" onClick={()=>setFilter('all')}>Show all</button>}
+      </div>
+      <table className="tbl"><thead><tr><th>🏷️ Asset Tag</th><th>🔋 Battery</th><th>⚡ CPU</th><th>❤️ Health</th><th>📊 Status</th></tr></thead>
+        <tbody>{filtered.map(([tag,t])=>(<tr key={tag}>
           <td><span className="mono">{tag}</span></td>
           <td><div style={{display:'flex',alignItems:'center',gap:8}}><div className="health-bar-bg" style={{width:80}}><div className="health-bar-fill" style={{width:`${t.battery}%`,background:t.battery<20?'#E24B4A':t.battery<50?'#EF9F27':'#1D9E75'}}/></div><span style={{fontSize:11,color:'var(--text2)'}}>{t.battery}%</span></div></td>
           <td><div style={{display:'flex',alignItems:'center',gap:8}}><div className="health-bar-bg" style={{width:80}}><div className="health-bar-fill" style={{width:`${t.cpu}%`,background:t.cpu>80?'#E24B4A':t.cpu>60?'#EF9F27':'#1D9E75'}}/></div><span style={{fontSize:11,color:'var(--text2)'}}>{t.cpu}%</span></div></td>
           <td><HealthBar score={t.health}/></td>
-          <td><span className={`badge ${t.health<40?'badge-high':'badge-ready'}`}>{t.health<40?'🔴 Critical':'🟢 Healthy'}</span></td>
+          <td><span className={`badge ${t.health<40?'badge-high':t.health<65?'badge-medium':'badge-ready'}`}>{t.health<40?'🔴 Critical':t.health<65?'🟡 Warning':'🟢 Healthy'}</span></td>
         </tr>))}</tbody>
       </table>
     </div>
@@ -526,13 +541,13 @@ function App(){
 
   if(!token)return <TokenGate onSave={t=>{setToken(t);}}/>;
 
-  const nav=[{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'assets',label:'Assets',icon:'💻'},{id:'telemetry',label:'Telemetry',icon:'📡'},{id:'users',label:'Staff',icon:'👥'},{id:'qr',label:'QR Labels',icon:'📷'}];
+  const nav=[{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'assets',label:'Assets',icon:'🖥️'},{id:'telemetry',label:'Telemetry',icon:'📡'},{id:'users',label:'Staff',icon:'👨‍💼'},{id:'qr',label:'QR Labels',icon:'🔲'}];
   const titles={dashboard:'Dashboard',assets:'Assets',telemetry:'Telemetry',users:'Staff',qr:'QR Labels'};
   const subs={dashboard:'Live data — Snipe-IT + MongoDB + InfluxDB',assets:'Full inventory with checkout, checkin, maintenance & location',telemetry:'Live device health from InfluxDB',users:'Synced from HRIS',qr:'Generate & print QR labels'};
 
   return(<>
     <nav className="sidebar no-print">
-      <div className="sidebar-logo"><div className="logo-icon">🏛️</div><span>Ascendia AMS</span></div>
+     <div className="sidebar-logo" style={{cursor:'pointer'}} onClick={()=>setPage('dashboard')}><div className="logo-icon" style={{width:40,height:40,borderRadius:10}}>🏛️</div><span style={{fontSize:14}}>Ascendia AMS</span></div>
       <div className="nav-section">Main</div>
       {nav.map(n=>(<div key={n.id} className={`nav-item ${page===n.id?'active':''}`} onClick={()=>setPage(n.id)}><span style={{fontSize:16,width:18,textAlign:'center'}}>{n.icon}</span>{n.label}</div>))}
       <div className="sidebar-footer">
@@ -553,7 +568,7 @@ function App(){
           <button className="btn btn-primary" onClick={()=>window.open('http://snipe-it.test/hardware/create','_blank')}>+ New Asset</button>
         </div>
       </div>
-      {page==='dashboard'&&<Dashboard assets={assets} users={users} reload={loadData} showToast={showToast}/>}
+      {page==='dashboard'&&<Dashboard assets={assets} users={users} reload={loadData} showToast={showToast} setPage={setPage}/>}
       {page==='assets'&&<AssetsPage assets={assets} users={users} locations={locations} reload={loadData} showToast={showToast}/>}
       {page==='telemetry'&&<TelemetryPage/>}
       {page==='users'&&<UsersPage users={users}/>}
