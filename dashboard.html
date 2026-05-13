@@ -703,6 +703,443 @@ function QRPage({assets}){
   </>);
 }
 
+/* ── License Management Page ── */
+function LicensePage({showToast}){
+  const [licenses,setLicenses]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [selected,setSelected]=useState(null);
+
+  useEffect(()=>{
+    api('GET','licenses?limit=50').then(d=>{setLicenses(d.rows||[]);setLoading(false);}).catch(()=>setLoading(false));
+  },[]);
+
+  const getExpStatus=(exp)=>{
+    if(!exp)return{label:'No expiry',cls:'badge-blue'};
+    const days=(new Date(exp)-new Date())/86400000;
+    if(days<0)return{label:'Expired',cls:'badge-high'};
+    if(days<30)return{label:`${Math.round(days)}d left`,cls:'badge-high'};
+    if(days<90)return{label:`${Math.round(days)}d left`,cls:'badge-medium'};
+    return{label:`${Math.round(days)}d left`,cls:'badge-ready'};
+  };
+
+  return(<>
+    <div className="metrics" style={{gridTemplateColumns:'repeat(3,1fr)',marginBottom:14}}>
+      <div className="metric-card"><div className="metric-top"><div className="metric-icon teal">📄</div></div><div className="metric-val">{licenses.length}</div><div className="metric-label">Total licenses</div></div>
+      <div className="metric-card"><div className="metric-top"><div className="metric-icon blue">💺</div></div><div className="metric-val">{licenses.reduce((s,l)=>s+(l.seats||0),0)}</div><div className="metric-label">Total seats</div></div>
+      <div className={`metric-card ${licenses.some(l=>{const d=(new Date(l.expiration_date)-new Date())/86400000;return d<30&&d>0;})?'alert':''}`}><div className="metric-top"><div className="metric-icon amber">⏰</div></div><div className="metric-val">{licenses.filter(l=>{const d=(new Date(l.expiration_date)-new Date())/86400000;return d<30&&d>0;}).length}</div><div className="metric-label">Expiring soon</div></div>
+    </div>
+    <div className="card">
+      <div className="card-head"><span className="card-title">📄 Software Licenses</span><button className="btn btn-primary btn-sm" onClick={()=>window.open('http://snipe-it.test/licenses/create','_blank')}>+ New License</button></div>
+      {loading?<div style={{padding:'2rem',textAlign:'center'}}><Spinner/></div>:(
+        <table className="tbl">
+          <thead><tr><th>Name</th><th>Seats</th><th>Seats Used</th><th>Utilization</th><th>Expiry</th><th>Cost</th></tr></thead>
+          <tbody>{licenses.map(l=>{
+            const used=l.seats-(l.remaining_seats||l.seats);
+            const util=l.seats>0?Math.round(used/l.seats*100):0;
+            const exp=getExpStatus(l.expiration_date);
+            return(<tr key={l.id} style={{cursor:'pointer'}} onClick={()=>setSelected(l)}>
+              <td style={{fontWeight:500}}>{l.name}</td>
+              <td>{l.seats||0}</td>
+              <td>{used}</td>
+              <td>
+                <div style={{display:'flex',alignItems:'center',gap:8}}>
+                  <div className="health-bar-bg"><div className="health-bar-fill" style={{width:`${util}%`,background:util>90?'#E24B4A':util>70?'#EF9F27':'#1D9E75'}}/></div>
+                  <span style={{fontSize:11,color:'var(--text2)'}}>{util}%</span>
+                </div>
+              </td>
+              <td><span className={`badge ${exp.cls}`}>{exp.label}</span></td>
+              <td><span style={{fontSize:12,color:'var(--text2)'}}>₱{parseFloat((l.purchase_cost||'0').toString().replace(/,/g,'')).toLocaleString()}</span></td>
+            </tr>);
+          })}</tbody>
+        </table>
+      )}
+    </div>
+    {selected&&(
+      <div className="modal-overlay" onClick={()=>setSelected(null)}>
+        <div className="modal" onClick={e=>e.stopPropagation()}>
+          <div className="modal-title">{selected.name}<span className="modal-close" onClick={()=>setSelected(null)}>✕</span></div>
+          <div style={{background:'var(--bg3)',borderRadius:10,padding:'1rem',marginBottom:'1rem'}}>
+            {[['License Name',selected.name],['Total Seats',selected.seats],['Remaining Seats',selected.remaining_seats],['Purchase Cost',`₱${parseFloat((selected.purchase_cost||'0').toString().replace(/,/g,'')).toLocaleString()}`],['Expiry Date',selected.expiration_date||'—'],['Notes',selected.notes||'—']].map(([k,v])=>(
+              <div className="result-row" key={k}><span style={{color:'var(--text2)'}}>{k}</span><span style={{fontWeight:500}}>{v}</span></div>
+            ))}
+          </div>
+          <div style={{display:'flex',gap:10}}>
+            <button className="btn btn-primary" style={{flex:1}} onClick={()=>window.open(`http://snipe-it.test/licenses/${selected.id}`,'_blank')}>View in Snipe-IT</button>
+            <button className="btn" style={{flex:1}} onClick={()=>setSelected(null)}>Close</button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>);
+}
+
+/* ── Audit Trail Page ── */
+function AuditPage(){
+  const [events,setEvents]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [filter,setFilter]=useState('all');
+
+  useEffect(()=>{
+    fetch(`http://localhost:8080/audit/trail?limit=50`)
+      .then(r=>r.json()).then(d=>{setEvents(d.events||[]);setLoading(false);})
+      .catch(()=>{
+        // Fallback mock data
+        setEvents([
+          {event_id:'AUD-001',action:'ASSET_CHECKOUT',actor:'Roberto Garcia',asset_tag:'AAI-2026-00003',before:{status:'Ready to Deploy'},after:{status:'Deployed',assigned_to:'Jose Reyes'},timestamp:'2026-05-13T08:10:00',process:'Asset Assignment'},
+          {event_id:'AUD-002',action:'AI_SCORE_UPDATED',actor:'AI Scorer',asset_tag:'AAI-2026-00001',before:{ai_priority:'Unscored'},after:{ai_priority:'High',status:'Maintenance-High'},timestamp:'2026-05-13T08:05:00',process:'Maintenance Processing'},
+          {event_id:'AUD-003',action:'USER_SYNCED',actor:'HRIS Integration',asset_tag:null,notes:'16 users synced from HR system',timestamp:'2026-05-12T07:46:00',process:'User Sync'},
+          {event_id:'AUD-004',action:'DISPOSAL_COMPLETED',actor:'Juan Dela Cruz',asset_tag:'AAI-2026-00001',after:{stage:'Disposed'},timestamp:'2026-05-12T15:30:00',process:'Disposal Workflow'},
+          {event_id:'AUD-005',action:'LICENSE_ASSIGNED',actor:'System',notes:'Microsoft Office 365 → Maria Santos',timestamp:'2026-05-12T14:35:00',process:'License Management'},
+          {event_id:'AUD-006',action:'LOCATION_UPDATE',actor:'Jose Reyes',asset_tag:'AAI-2026-00008',before:{location:'QC-MAIN-CLASS101'},after:{location:'QC-MAIN-LAB1'},timestamp:'2026-05-12T10:20:00',process:'Asset Transfer'},
+          {event_id:'AUD-007',action:'PROCUREMENT_RECEIVED',actor:'Procurement System',notes:'PO-00004 from Dell Philippines — 3 assets',timestamp:'2026-05-11T09:00:00',process:'Procurement Trigger'},
+        ]);
+        setLoading(false);
+      });
+  },[]);
+
+  const actionColor={ASSET_CHECKOUT:'var(--teal)',AI_SCORE_UPDATED:'var(--red)',USER_SYNCED:'var(--blue)',DISPOSAL_COMPLETED:'var(--amber)',LICENSE_ASSIGNED:'var(--blue)',LOCATION_UPDATE:'var(--teal)',PROCUREMENT_RECEIVED:'var(--teal)',QR_AUDIT_SCAN:'var(--blue)',TRANSFER_COMPLETED:'var(--teal)'};
+  const filtered=filter==='all'?events:events.filter(e=>e.action.includes(filter.toUpperCase()));
+
+  return(<>
+    <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap'}}>
+      {['all','asset','user','license','disposal','procurement'].map(f=>(
+        <button key={f} className={`btn btn-sm ${filter===f?'btn-primary':''}`} onClick={()=>setFilter(f)} style={{textTransform:'capitalize'}}>{f}</button>
+      ))}
+    </div>
+    <div className="card">
+      <div className="card-head"><span className="card-title">📝 Audit Trail ({filtered.length} events)</span></div>
+      {loading?<div style={{padding:'2rem',textAlign:'center'}}><Spinner/></div>:(
+        <table className="tbl">
+          <thead><tr><th>Event ID</th><th>Action</th><th>Actor</th><th>Asset</th><th>Details</th><th>Process</th><th>Timestamp</th></tr></thead>
+          <tbody>{filtered.map(e=>(
+            <tr key={e.event_id}>
+              <td><span className="mono" style={{fontSize:10}}>{e.event_id?.slice(0,15)}</span></td>
+              <td><span className="badge" style={{background:'rgba(255,255,255,0.05)',color:actionColor[e.action]||'var(--text2)',fontSize:10}}>{e.action}</span></td>
+              <td style={{fontSize:12}}>{e.actor||'—'}</td>
+              <td><span className="mono">{e.asset_tag||'—'}</span></td>
+              <td style={{fontSize:11,color:'var(--text2)',maxWidth:180,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{e.notes||(e.after?JSON.stringify(e.after).slice(0,40):'—')}</td>
+              <td><span style={{fontSize:11,color:'var(--text3)'}}>{e.process||'—'}</span></td>
+              <td style={{fontSize:11,color:'var(--text3)',whiteSpace:'nowrap'}}>{e.timestamp?new Date(e.timestamp).toLocaleString('en-PH',{dateStyle:'short',timeStyle:'short'}):'—'}</td>
+            </tr>
+          ))}</tbody>
+        </table>
+      )}
+    </div>
+  </>);
+}
+
+/* ── Analytics / Reports Page ── */
+function AnalyticsPage({assets,users}){
+  const chartRef1=useRef(null);const chartRef2=useRef(null);const chartRef3=useRef(null);
+  const inst1=useRef(null);const inst2=useRef(null);const inst3=useRef(null);
+
+  const totalValue=assets.reduce((s,a)=>s+(parseFloat((a.purchase_cost||'0').toString().replace(/,/g,''))||0),0);
+  const byCategory={};assets.forEach(a=>{const c=a.category?.name||'Other';byCategory[c]=(byCategory[c]||0)+1;});
+  const byLocation={};assets.forEach(a=>{const l=a.location?.name||'Unknown';byLocation[l]=(byLocation[l]||0)+1;});
+  const highAI=assets.filter(a=>getAiScore(a)==='High').length;
+  const medAI=assets.filter(a=>getAiScore(a)==='Medium').length;
+  const lowAI=assets.filter(a=>getAiScore(a)==='Low').length;
+  const healthScores=Object.values(TELEMETRY).map(t=>t.health);
+  const avgHealth=Math.round(healthScores.reduce((s,h)=>s+h,0)/healthScores.length);
+
+  useEffect(()=>{
+    if(!chartRef1.current)return;
+    if(inst1.current)inst1.current.destroy();
+    inst1.current=new Chart(chartRef1.current,{type:'doughnut',data:{labels:Object.keys(byCategory),datasets:[{data:Object.values(byCategory),backgroundColor:['#378ADD','#1D9E75','#EF9F27','#E24B4A','#9B59B6','#E67E22','#1ABC9C','#E74C3C','#3498DB','#2ECC71','#F39C12'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#8B90A0',font:{size:11}}}}}});
+  },[JSON.stringify(byCategory)]);
+
+  useEffect(()=>{
+    if(!chartRef2.current)return;
+    if(inst2.current)inst2.current.destroy();
+    inst2.current=new Chart(chartRef2.current,{type:'bar',data:{labels:['High','Medium','Low','Unscored'],datasets:[{data:[highAI,medAI,lowAI,assets.length-highAI-medAI-lowAI],backgroundColor:['#E24B4A','#EF9F27','#1D9E75','#555B6E'],borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{color:'#555B6E'},grid:{color:'rgba(255,255,255,0.05)'}},x:{ticks:{color:'#555B6E'},grid:{display:false}}}}});
+  },[assets.length]);
+
+  useEffect(()=>{
+    if(!chartRef3.current)return;
+    if(inst3.current)inst3.current.destroy();
+    const locs=Object.keys(byLocation).slice(0,6);
+    inst3.current=new Chart(chartRef3.current,{type:'bar',indexAxis:'y',data:{labels:locs,datasets:[{data:locs.map(l=>byLocation[l]),backgroundColor:'#378ADD',borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{color:'#555B6E'},grid:{color:'rgba(255,255,255,0.05)'}},y:{ticks:{color:'#555B6E',font:{family:'DM Mono',size:10}},grid:{display:false}}}}});
+  },[JSON.stringify(byLocation)]);
+
+  return(<>
+    <div className="metrics" style={{marginBottom:14}}>
+      <div className="metric-card"><div className="metric-top"><div className="metric-icon teal">📦</div></div><div className="metric-val">{assets.length}</div><div className="metric-label">Total assets</div></div>
+      <div className="metric-card"><div className="metric-top"><div className="metric-icon amber">💰</div></div><div className="metric-val">₱{Math.round(totalValue/1000)}K</div><div className="metric-label">Total value</div></div>
+      <div className="metric-card"><div className="metric-top"><div className="metric-icon teal">❤️</div></div><div className="metric-val">{avgHealth}%</div><div className="metric-label">Avg health score</div></div>
+      <div className={`metric-card ${highAI>0?'alert':''}`}><div className="metric-top"><div className="metric-icon red">⚠️</div></div><div className="metric-val red">{highAI}</div><div className="metric-label">High priority assets</div></div>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
+      <div className="card"><div className="card-head"><span className="card-title">📊 Assets by Category</span></div><div style={{position:'relative',height:200}}><canvas ref={chartRef1}/></div></div>
+      <div className="card"><div className="card-head"><span className="card-title">🤖 AI Priority Distribution</span></div><div style={{position:'relative',height:200}}><canvas ref={chartRef2}/></div></div>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
+      <div className="card"><div className="card-head"><span className="card-title">📍 Assets by Location</span></div><div style={{position:'relative',height:200}}><canvas ref={chartRef3}/></div></div>
+      <div className="card">
+        <div className="card-head"><span className="card-title">📈 System KPIs</span></div>
+        {[['Total Assets',assets.length],['Total Staff',users.length],['Avg Health Score',`${avgHealth}%`],['High Priority Assets',highAI],['Total Inventory Value',`₱${Math.round(totalValue).toLocaleString()}`],['Assets per Staff',`${(assets.length/Math.max(users.length,1)).toFixed(1)}`],['Critical Devices (< 40%)',Object.values(TELEMETRY).filter(t=>t.health<40).length],['Healthy Devices (> 65%)',Object.values(TELEMETRY).filter(t=>t.health>=65).length]].map(([k,v])=>(
+          <div className="result-row" key={k}><span style={{color:'var(--text2)',fontSize:12}}>{k}</span><span style={{fontWeight:500,fontSize:13}}>{v}</span></div>
+        ))}
+      </div>
+    </div>
+  </>);
+}
+
+/* ── Disposal / Retirement Page ── */
+function DisposalPage({assets,users,showToast}){
+  const [disposals,setDisposals]=useState([]);
+  const [modal,setModal]=useState(false);
+  const [form,setForm]=useState({asset_id:'',asset_tag:'',asset_name:'',requested_by:'',reason:''});
+  const [loading,setLoading]=useState(false);
+  const update=k=>e=>{
+    const val=e.target.value;
+    if(k==='asset_id'){
+      const a=assets.find(x=>x.id===parseInt(val));
+      setForm({...form,asset_id:val,asset_tag:a?.asset_tag||'',asset_name:a?.name||''});
+    } else setForm({...form,[k]:val});
+  };
+
+  const submit=async()=>{
+    if(!form.asset_id||!form.requested_by||!form.reason)return;
+    setLoading(true);
+    try{
+      await api('PATCH',`hardware/${form.asset_id}`,{status_id:4}); // Pending Retirement
+      const disposal={...form,disposal_id:`DSP-${Date.now()}`,stage:'Pending Return',created_at:new Date().toLocaleString(),evidence:{asset_returned:false,data_wiped:false,disposal_cert:false,finance_approved:false}};
+      setDisposals(prev=>[disposal,...prev]);
+      showToast(`Disposal initiated for ${form.asset_tag}`,'success');
+      setForm({asset_id:'',asset_tag:'',asset_name:'',requested_by:'',reason:''});
+      setModal(false);
+    }catch(e){showToast('Failed to initiate disposal','error');}
+    setLoading(false);
+  };
+
+  const advance=(id,gate)=>{
+    setDisposals(prev=>prev.map(d=>{
+      if(d.disposal_id!==id)return d;
+      const ev={...d.evidence,[gate]:true};
+      const done=Object.values(ev).every(Boolean);
+      return {...d,evidence:ev,stage:done?'Disposed':'In Progress'};
+    }));
+    showToast(`Evidence gate "${gate}" confirmed!`,'success');
+  };
+
+  return(<>
+    <div className="metrics" style={{gridTemplateColumns:'repeat(3,1fr)',marginBottom:14}}>
+      <div className="metric-card"><div className="metric-top"><div className="metric-icon amber">🗑️</div></div><div className="metric-val">{disposals.length}</div><div className="metric-label">Active disposals</div></div>
+      <div className="metric-card"><div className="metric-top"><div className="metric-icon teal">✅</div></div><div className="metric-val">{disposals.filter(d=>d.stage==='Disposed').length}</div><div className="metric-label">Completed</div></div>
+      <div className="metric-card"><div className="metric-top"><div className="metric-icon red">⏳</div></div><div className="metric-val">{disposals.filter(d=>d.stage!=='Disposed').length}</div><div className="metric-label">Pending</div></div>
+    </div>
+    <div className="card" style={{marginBottom:14}}>
+      <div className="card-head"><span className="card-title">🗑️ Disposal / Retirement Records</span><button className="btn btn-primary btn-sm" onClick={()=>setModal(true)}>+ Initiate Disposal</button></div>
+      {disposals.length===0?<div style={{color:'var(--text3)',fontSize:13,padding:'1rem 0'}}>No active disposals. Click "+ Initiate Disposal" to start.</div>:(
+        disposals.map(d=>(
+          <div key={d.disposal_id} style={{background:'var(--bg3)',borderRadius:10,padding:'1rem',marginBottom:10}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+              <div><span className="mono">{d.asset_tag}</span> — <strong>{d.asset_name}</strong></div>
+              <span className={`badge ${d.stage==='Disposed'?'badge-ready':'badge-medium'}`}>{d.stage}</span>
+            </div>
+            <div style={{fontSize:12,color:'var(--text2)',marginBottom:10}}>Requested by: {d.requested_by} | Reason: {d.reason}</div>
+            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+              {Object.entries(d.evidence).map(([gate,done])=>(
+                <button key={gate} className={`btn btn-sm ${done?'btn-primary':''}`} style={{opacity:done?1:0.7}} onClick={()=>!done&&advance(d.disposal_id,gate)}>
+                  {done?'✅':'⬜'} {gate.replace(/_/g,' ')}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+    {modal&&(
+      <div className="modal-overlay" onClick={()=>setModal(false)}>
+        <div className="modal" onClick={e=>e.stopPropagation()}>
+          <div className="modal-title">🗑️ Initiate Disposal<span className="modal-close" onClick={()=>setModal(false)}>✕</span></div>
+          <div className="form-group"><label className="form-label">Asset *</label>
+            <select className="form-input" value={form.asset_id} onChange={update('asset_id')}>
+              <option value="">Select asset to retire...</option>
+              {assets.map(a=><option key={a.id} value={a.id}>{a.asset_tag} — {a.name}</option>)}
+            </select>
+          </div>
+          <div className="form-group"><label className="form-label">Requested By *</label>
+            <select className="form-input" value={form.requested_by} onChange={update('requested_by')}>
+              <option value="">Select requestor...</option>
+              {users.filter(u=>u.activated).map(u=><option key={u.id} value={u.name}>{u.name}</option>)}
+            </select>
+          </div>
+          <div className="form-group"><label className="form-label">Reason *</label>
+            <textarea className="form-input" rows={3} placeholder="e.g. Hardware failure — beyond economical repair" value={form.reason} onChange={update('reason')} style={{resize:'vertical'}}/>
+          </div>
+          <div className="modal-actions">
+            <button className="btn" onClick={()=>setModal(false)}>Cancel</button>
+            <button className="btn btn-primary" onClick={submit} disabled={loading||!form.asset_id||!form.requested_by||!form.reason}>{loading?<Spinner/>:'Initiate Disposal'}</button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>);
+}
+
+/* ── Digital Acknowledgments Page ── */
+function AcknowledgmentsPage({assets,users,showToast}){
+  const [pending,setPending]=useState([
+    {checkout_id:'CHK-001',asset_tag:'AAI-2026-00002',asset_name:'Dell Latitude 5540',user_name:'Maria Santos',checkout_date:'2026-05-12 15:47',acknowledged:false},
+    {checkout_id:'CHK-002',asset_tag:'AAI-2026-00006',asset_name:'MacBook Pro M3',user_name:'Miguel Torres',checkout_date:'2026-05-12 14:30',acknowledged:false},
+  ]);
+  const [newChk,setNewChk]=useState(false);
+  const [form,setForm]=useState({asset_id:'',user_id:'',note:''});
+  const [loading,setLoading]=useState(false);
+
+  const acknowledge=(id)=>{
+    setPending(prev=>prev.map(p=>p.checkout_id===id?{...p,acknowledged:true,acknowledged_at:new Date().toLocaleString()}:p));
+    showToast('Asset receipt acknowledged!','success');
+  };
+
+  const submit=async()=>{
+    if(!form.asset_id||!form.user_id)return;
+    setLoading(true);
+    try{
+      await api('POST',`hardware/${form.asset_id}/checkout`,{checkout_to_type:'user',assigned_user:parseInt(form.user_id),note:form.note});
+      const a=assets.find(x=>x.id===parseInt(form.asset_id));
+      const u=users.find(x=>x.id===parseInt(form.user_id));
+      const chk={checkout_id:`CHK-${Date.now()}`,asset_tag:a?.asset_tag,asset_name:a?.name,user_name:u?.name,checkout_date:new Date().toLocaleString(),acknowledged:false};
+      setPending(prev=>[chk,...prev]);
+      showToast(`Checkout initiated — awaiting acknowledgment from ${u?.name}`,'success');
+      setForm({asset_id:'',user_id:'',note:''});
+      setNewChk(false);
+    }catch(e){showToast('Checkout failed','error');}
+    setLoading(false);
+  };
+
+  const unacknowledged=pending.filter(p=>!p.acknowledged);
+  const acknowledged=pending.filter(p=>p.acknowledged);
+
+  return(<>
+    <div className="metrics" style={{gridTemplateColumns:'repeat(3,1fr)',marginBottom:14}}>
+      <div className={`metric-card ${unacknowledged.length>0?'alert':''}`}><div className="metric-top"><div className="metric-icon red">⏳</div></div><div className={`metric-val ${unacknowledged.length>0?'red':''}`}>{unacknowledged.length}</div><div className="metric-label">Pending acknowledgment</div></div>
+      <div className="metric-card"><div className="metric-top"><div className="metric-icon teal">✅</div></div><div className="metric-val">{acknowledged.length}</div><div className="metric-label">Acknowledged</div></div>
+      <div className="metric-card"><div className="metric-top"><div className="metric-icon blue">📋</div></div><div className="metric-val">{pending.length}</div><div className="metric-label">Total checkouts</div></div>
+    </div>
+    <div className="card" style={{marginBottom:14}}>
+      <div className="card-head"><span className="card-title">⏳ Pending Acknowledgments</span><button className="btn btn-primary btn-sm" onClick={()=>setNewChk(true)}>+ New Checkout</button></div>
+      {unacknowledged.length===0?<div style={{color:'var(--teal)',fontSize:13,padding:'0.5rem 0'}}>✅ All checkouts acknowledged!</div>:(
+        <table className="tbl">
+          <thead><tr><th>Asset</th><th>Assigned to</th><th>Checkout Date</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>{unacknowledged.map(p=>(
+            <tr key={p.checkout_id}>
+              <td><span className="mono">{p.asset_tag}</span><div style={{fontSize:11,color:'var(--text3)'}}>{p.asset_name}</div></td>
+              <td>{p.user_name}</td>
+              <td style={{fontSize:11,color:'var(--text3)'}}>{p.checkout_date}</td>
+              <td><span className="badge badge-medium">Pending</span></td>
+              <td><button className="btn btn-sm btn-primary" onClick={()=>acknowledge(p.checkout_id)}>✅ Acknowledge</button></td>
+            </tr>
+          ))}</tbody>
+        </table>
+      )}
+    </div>
+    {acknowledged.length>0&&(
+      <div className="card">
+        <div className="card-head"><span className="card-title">✅ Acknowledged Checkouts</span></div>
+        <table className="tbl">
+          <thead><tr><th>Asset</th><th>Assigned to</th><th>Checkout Date</th><th>Acknowledged At</th></tr></thead>
+          <tbody>{acknowledged.map(p=>(
+            <tr key={p.checkout_id}>
+              <td><span className="mono">{p.asset_tag}</span></td>
+              <td>{p.user_name}</td>
+              <td style={{fontSize:11,color:'var(--text3)'}}>{p.checkout_date}</td>
+              <td style={{fontSize:11,color:'var(--teal)'}}>{p.acknowledged_at}</td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </div>
+    )}
+    {newChk&&(
+      <div className="modal-overlay" onClick={()=>setNewChk(false)}>
+        <div className="modal" onClick={e=>e.stopPropagation()}>
+          <div className="modal-title">📤 New Digital Checkout<span className="modal-close" onClick={()=>setNewChk(false)}>✕</span></div>
+          <div className="form-group"><label className="form-label">Asset *</label>
+            <select className="form-input" value={form.asset_id} onChange={e=>setForm({...form,asset_id:e.target.value})}>
+              <option value="">Select asset...</option>
+              {assets.filter(a=>!a.assigned_to).map(a=><option key={a.id} value={a.id}>{a.asset_tag} — {a.name}</option>)}
+            </select>
+          </div>
+          <div className="form-group"><label className="form-label">Assign to *</label>
+            <select className="form-input" value={form.user_id} onChange={e=>setForm({...form,user_id:e.target.value})}>
+              <option value="">Select staff...</option>
+              {users.filter(u=>u.activated).map(u=><option key={u.id} value={u.id}>{u.name} — {u.department?.name||'—'}</option>)}
+            </select>
+          </div>
+          <div className="form-group"><label className="form-label">Note</label>
+            <input className="form-input" placeholder="e.g. Issued for AY 2026-2027" value={form.note} onChange={e=>setForm({...form,note:e.target.value})}/>
+          </div>
+          <div className="modal-actions">
+            <button className="btn" onClick={()=>setNewChk(false)}>Cancel</button>
+            <button className="btn btn-primary" onClick={submit} disabled={loading||!form.asset_id||!form.user_id}>{loading?<Spinner/>:'Checkout & Request Acknowledgment'}</button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>);
+}
+
+/* ── LMS / Class Schedule Page ── */
+function LMSPage({assets}){
+  const schedules=[
+    {id:'SCH-001',course:'MSIT 631 — Advanced Systems Design',room:'QC-MAIN-LAB1',day:'Tuesday/Thursday',time:'09:00-11:00',instructor:'Miguel Torres',students:25,assets_needed:['Laptop','Projector'],critical:false},
+    {id:'SCH-002',course:'CS 101 — Introduction to Programming',room:'QC-MAIN-LAB1',day:'Monday/Wednesday/Friday',time:'13:00-15:00',instructor:'Maria Santos',students:30,assets_needed:['Laptop'],critical:true},
+    {id:'SCH-003',course:'Finance 201 — Financial Management',room:'QC-MAIN-CLASS101',day:'Tuesday/Thursday',time:'14:00-16:00',instructor:'Juan Dela Cruz',students:35,assets_needed:['Projector'],critical:false},
+  ];
+
+  const getLabAssets=(room)=>assets.filter(a=>(a.location?.name||'')===room);
+  const getReadiness=(room,needed)=>{
+    const roomAssets=getLabAssets(room);
+    const issues=roomAssets.filter(a=>a.status_label?.name?.includes('Maintenance'));
+    return{total:roomAssets.length,issues:issues.length,ready:roomAssets.length-issues.length};
+  };
+
+  return(<>
+    <div className="metrics" style={{gridTemplateColumns:'repeat(3,1fr)',marginBottom:14}}>
+      <div className="metric-card"><div className="metric-top"><div className="metric-icon blue">📅</div></div><div className="metric-val">{schedules.length}</div><div className="metric-label">Active schedules</div></div>
+      <div className="metric-card"><div className="metric-top"><div className="metric-icon red">⚠️</div></div><div className="metric-val">{schedules.filter(s=>s.critical).length}</div><div className="metric-label">Critical period classes</div></div>
+      <div className="metric-card"><div className="metric-top"><div className="metric-icon teal">🏫</div></div><div className="metric-val">{[...new Set(schedules.map(s=>s.room))].length}</div><div className="metric-label">Rooms in use</div></div>
+    </div>
+    {schedules.map(s=>{
+      const r=getReadiness(s.room,s.assets_needed);
+      return(
+        <div key={s.id} className="card" style={{marginBottom:14,border:s.critical?'1px solid var(--red)':'1px solid var(--border)'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
+            <div>
+              <div style={{fontWeight:500,fontSize:15}}>{s.course}</div>
+              <div style={{fontSize:12,color:'var(--text2)',marginTop:4}}>{s.day} • {s.time} • {s.instructor} • {s.students} students</div>
+            </div>
+            <div style={{display:'flex',gap:8,alignItems:'center'}}>
+              {s.critical&&<span className="badge badge-high">🔴 Critical Period</span>}
+              <span className="badge badge-blue">{s.room}</span>
+            </div>
+          </div>
+          <div style={{display:'flex',gap:16,fontSize:13}}>
+            <span>📦 Assets needed: <strong>{s.assets_needed.join(', ')}</strong></span>
+            <span>✅ Ready: <strong style={{color:'var(--teal)'}}>{r.ready}</strong></span>
+            {r.issues>0&&<span>⚠️ Issues: <strong style={{color:'var(--red)'}}>{r.issues}</strong></span>}
+          </div>
+          {r.issues>0&&s.critical&&(
+            <div style={{marginTop:10,padding:'8px 12px',background:'var(--red-dim)',borderRadius:8,fontSize:13,color:'var(--red)'}}>
+              🔴 CRITICAL: Asset issues detected during finals period — escalate immediately to IT Support!
+            </div>
+          )}
+          <div style={{marginTop:10}}>
+            <div style={{fontSize:11,color:'var(--text3)',marginBottom:6}}>Assets in {s.room}:</div>
+            <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+              {getLabAssets(s.room).slice(0,6).map(a=>(
+                <span key={a.id} className={`badge ${a.status_label?.name?.includes('Maintenance')?'badge-high':'badge-ready'}`} style={{fontSize:10}}>{a.asset_tag}</span>
+              ))}
+              {getLabAssets(s.room).length>6&&<span style={{fontSize:11,color:'var(--text3)'}}>+{getLabAssets(s.room).length-6} more</span>}
+            </div>
+          </div>
+        </div>
+      );
+    })}
+  </>);
+}
+
 /* ── App ── */
 function App(){
   const [token,setToken]=useState(localStorage.getItem('snipeit_token')||'');
@@ -730,7 +1167,7 @@ function App(){
 
   if(!token)return <TokenGate onSave={t=>{setToken(t);}}/>;
 
-  const nav=[{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'assets',label:'Assets',icon:'🖥️'},{id:'telemetry',label:'Telemetry',icon:'📡'},{id:'users',label:'Staff',icon:'👨‍💼'},{id:'requests',label:'Requests',icon:'📝'},{id:'qr',label:'QR Labels',icon:'🔲'}];
+  const nav=[{id:'licenses',label:'Licenses',icon:'📄'}, {id:'audit',label:'Audit Trail',icon:'📝'}, {id:'analytics',label:'Analytics',icon:'📈'}, {id:'disposal',label:'Disposal',icon:'🗑️'}, {id:'acknowledgments',label:'Acknowledgments',icon:'✅'}, {id:'lms',label:'LMS Schedule',icon:'📅'},{id:'dashboard',label:'Dashboard',icon:'📊'},{id:'assets',label:'Assets',icon:'🖥️'},{id:'telemetry',label:'Telemetry',icon:'📡'},{id:'users',label:'Staff',icon:'👨‍💼'},{id:'requests',label:'Requests',icon:'📝'},{id:'qr',label:'QR Labels',icon:'🔲'}];
   const titles={dashboard:'Dashboard',assets:'Assets',telemetry:'Telemetry',users:'Staff',qr:'QR Labels'};
   const subs={dashboard:'Live data — Snipe-IT + MongoDB + InfluxDB',assets:'Full inventory with checkout, checkin, maintenance & location',telemetry:'Live device health from InfluxDB',users:'Synced from HRIS',qr:'Generate & print QR labels'};
 
@@ -763,7 +1200,14 @@ function App(){
       {page==='telemetry'&&<TelemetryPage/>}
       {page==='users'&&<UsersPage users={users}/>}
       {page==='requests'&&<RequestsPage users={users} assets={assets} showToast={showToast}/>}
+      {page==='licenses'&&<LicensePage showToast={showToast}/>}
+      {page==='audit'&&<AuditPage/>}
+      {page==='analytics'&&<AnalyticsPage assets={assets} users={users}/>}
+      {page==='disposal'&&<DisposalPage assets={assets} users={users} showToast={showToast}/>}
+      {page==='acknowledgments'&&<AcknowledgmentsPage assets={assets} users={users} showToast={showToast}/>}
+      {page==='lms'&&<LMSPage assets={assets}/>}
       {page==='qr'&&<QRPage assets={assets}/>}
+      
     </main>
     {toast&&<Toast msg={toast.msg} type={toast.type} onClose={()=>setToast(null)}/>}
   </>);
