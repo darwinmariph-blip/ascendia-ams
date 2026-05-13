@@ -30,21 +30,21 @@ cd ~/ascendia-ams && python3 proxy.py
 
 ---
 
-## 📊 Dashboard Pages
+## 📊 Dashboard Pages (12 pages)
 
 | Page | Features |
 |---|---|
 | **Dashboard** | Live metrics, device health chart, clickable metric cards, recent activity |
-| **Assets** | Full inventory, search/filter by category/AI priority, checkout, checkin, maintenance tickets, location update, clickable rows with detail modal |
-| **Telemetry** | Live InfluxDB health data, filter by critical/warning/healthy, clickable rows with detail modal |
-| **Staff** | Full staff directory, clickable rows with detail modal, + Staff button |
-| **Requests** | Submit maintenance, asset request, and transfer requests with priority selection |
-| **Licenses** | Software license tracking, seat usage, utilization bars, expiry alerts |
+| **Assets** | Full inventory, search/filter, checkout, checkin, maintenance tickets, location update, clickable rows with detail modal |
+| **Telemetry** | Live InfluxDB health data, filter by critical/warning/healthy, clickable rows |
+| **Staff** | Full directory, clickable rows with detail modal, + Staff button |
+| **Requests** | Submit maintenance, asset request, and transfer requests |
+| **Licenses** | Software license tracking, seat usage, utilization bars, expiry alerts, clickable rows |
 | **Audit Trail** | Full audit history with actor, before/after, timestamp, filter by type |
-| **Analytics** | Charts for asset distribution, AI priority, location breakdown, full KPI report |
-| **Disposal** | Retirement workflow with 4 evidence gates — return, data wipe, cert, finance approval |
-| **Acknowledgments** | Digital checkout acknowledgment tracking — pending and confirmed |
-| **LMS Schedule** | Class schedules, lab readiness checks, critical period alerts |
+| **Analytics** | Charts for asset distribution, AI priority, location breakdown, KPI report |
+| **Disposal** | Retirement workflow with 4 evidence gates |
+| **Acknowledgments** | Digital checkout acknowledgment tracking |
+| **LMS Schedule** | Class schedules, active/upcoming/done/tomorrow view, lab readiness checks |
 | **QR Labels** | Generate & print QR labels, asset lookup, clickable cards with detail modal |
 
 ---
@@ -61,7 +61,7 @@ cd ~/ascendia-ams && python3 proxy.py
 | Graph DB | NetworkX + MongoDB | Relationship maps (D4) |
 | Cache + Events | Redis 8.6 | Sessions, event streaming (D5) |
 | AI Service | Python + FastAPI | NLP maintenance risk scoring |
-| Dashboard | React (HTML) | Live interactive web UI |
+| Dashboard | React (HTML) | Live interactive web UI — 12 pages |
 | Mobile QR | HTML5 + JS | Asset scanning on mobile |
 
 ---
@@ -75,11 +75,12 @@ cd ~/ascendia-ams && python3 proxy.py
 | Departments | 7 |
 | Locations | 6 (QC-MAIN hierarchy) |
 | Suppliers | 13 (all assets formally linked) |
-| Software Licenses | 3 (MS Office 365, Adobe CC, Windows 11 Education) |
+| Software Licenses | 11 (MS Office 365, Adobe CC, Windows 11 Education, macOS Ventura, Google Workspace, Zoom, Canva, Kaspersky, AutoCAD, MATLAB, Visual Studio) |
 | Total Inventory Value | ₱1,980,000 |
 | Telemetry Readings | 500+ |
 | Maintenance Tickets | 5 (1 High, 1 Medium) |
 | Audit Events | 30+ |
+| LMS Schedules | 3 classes |
 
 ---
 
@@ -160,7 +161,7 @@ cd ~/ascendia-ams && python3 proxy.py
 | `integration_layer.py` | Redis, audit, notifications, licenses, disposal |
 | `complete_remaining.py` | Digital checkout, transfers, LMS, Finance ERP, KPIs |
 | `event_streaming.py` | Redis Streams event bus |
-| `fastapi_service.py` | REST API (15 endpoints) |
+| `fastapi_service.py` | REST API (15+ endpoints) |
 | `reporting.py` | Full cross-database report |
 | `security_network.py` | Network topology + security docs |
 | `add_school_assets.py` | Adds 57 realistic school assets |
@@ -206,27 +207,6 @@ Location: ~/ascendia-ams/backups/ (keeps last 7)
 | TO-BE Data Architecture (7 Deliverables) | ✅ 100% |
 | TO-BE Application Architecture | ✅ 100% |
 | Technology Architecture | ✅ 100% |
-
----
-
-## 🌐 API Endpoints (FastAPI — localhost:8080)
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | / | System info |
-| GET | /health | Health check all databases |
-| GET | /assets | All assets (Redis cached) |
-| GET | /assets/{tag} | Asset by tag |
-| GET | /users | All users (Redis cached) |
-| GET | /maintenance/tickets | All tickets |
-| POST | /maintenance/tickets | Create + AI-score ticket |
-| GET | /maintenance/tickets/open | Open tickets only |
-| GET | /audit/trail | Full audit log |
-| GET | /licenses | Software licenses |
-| GET | /notifications | Notifications log |
-| GET | /disposals | Disposal records |
-| POST | /disposals | Create disposal workflow |
-| GET | /report/summary | Full KPI summary |
 
 ---
 
