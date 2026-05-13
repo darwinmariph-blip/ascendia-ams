@@ -4,7 +4,7 @@
 
 # Ascendia Academic Institution Philippines
 ## IT Asset Management System
-### MSIT Capstone — Technology Architecture Implementation
+### MSIT 631 Advanced Systems Design and Implementation
 
 ---
 
