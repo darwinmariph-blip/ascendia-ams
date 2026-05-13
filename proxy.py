@@ -34,6 +34,47 @@ class ProxyHandler(SimpleHTTPRequestHandler):
         self._cors()
         self.end_headers()
 
+    def do_POST(self):
+        self._proxy_request('POST')
+
+    def do_PATCH(self):
+        self._proxy_request('PATCH')
+
+    def do_DELETE(self):
+        self._proxy_request('DELETE')
+
+    def _proxy_request(self, method):
+        if not self.path.startswith('/api/'):
+            self.send_response(404)
+            self.end_headers()
+            return
+        target = f"{SNIPEIT_URL}{self.path}"
+        length = int(self.headers.get('Content-Length', 0))
+        body   = self.rfile.read(length) if length else None
+        try:
+            req = urllib.request.Request(target, data=body, method=method, headers={
+                "Authorization": f"Bearer {TOKEN}",
+                "Accept":        "application/json",
+                "Content-Type":  "application/json",
+            })
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = resp.read()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self._cors()
+            self.end_headers()
+            self.wfile.write(data)
+        except urllib.error.HTTPError as e:
+            self.send_response(e.code)
+            self._cors()
+            self.end_headers()
+            self.wfile.write(e.read())
+        except Exception as e:
+            self.send_response(502)
+            self._cors()
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
+
     def do_GET(self):
         # ── Proxy API calls to Snipe-IT ──────────────────
         if self.path.startswith("/api/"):
