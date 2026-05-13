@@ -77,31 +77,37 @@ class ProxyHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         # ── Proxy API calls to Snipe-IT ──────────────────
-        if self.path.startswith("/api/"):
+        if self.path.startswith("/audit") or self.path.startswith("/lms"):
+            target = f"http://localhost:8080{self.path}"
+        elif self.path.startswith("/api/"):
             target = f"{SNIPEIT_URL}{self.path}"
-            try:
-                req = urllib.request.Request(target, headers={
-                    "Authorization": f"Bearer {TOKEN}",
-                    "Accept":        "application/json",
-                })
-                with urllib.request.urlopen(req, timeout=10) as resp:
-                    data = resp.read()
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self._cors()
-                self.end_headers()
-                self.wfile.write(data)
-            except urllib.error.HTTPError as e:
-                self.send_response(e.code)
-                self._cors()
-                self.end_headers()
-                self.wfile.write(e.read())
-            except Exception as e:
-                self.send_response(502)
-                self._cors()
-                self.end_headers()
-                self.wfile.write(json.dumps({"error": str(e)}).encode())
-            return
+        else:
+            # Serve static files
+            from http.server import SimpleHTTPRequestHandler
+            return SimpleHTTPRequestHandler.do_GET(self)
+        try:
+            req = urllib.request.Request(target, headers={
+                "Authorization": f"Bearer {TOKEN}",
+                "Accept": "application/json",
+            })
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = resp.read()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self._cors()
+            self.end_headers()
+            self.wfile.write(data)
+        except urllib.error.HTTPError as e:
+            self.send_response(e.code)
+            self._cors()
+            self.end_headers()
+            self.wfile.write(e.read())
+        except Exception as e:
+            self.send_response(502)
+            self._cors()
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
+        return
 
         # ── Serve static files (dashboard.html etc.) ─────
         return SimpleHTTPRequestHandler.do_GET(self)
