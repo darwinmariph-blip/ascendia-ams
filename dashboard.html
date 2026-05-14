@@ -1323,6 +1323,11 @@ function App(){
      <div className="sidebar-logo" style={{cursor:'pointer'}} onClick={()=>setPage('dashboard')}><div className="logo-icon">🏛️</div><span style={{fontSize:14}}><span style={{display:"block",lineHeight:1.2}}>Ascendia</span><span style={{display:"block",lineHeight:1.2,fontSize:10,color:"var(--text2)",whiteSpace:"nowrap"}}>Asset Management System</span></span></div>
       <div className="nav-section">Main</div>
       {nav.map(n=>(<div key={n.id} className={`nav-item ${page===n.id?'active':''}`} onClick={()=>setPage(n.id)}><span style={{fontSize:16,width:18,textAlign:'center'}}>{n.icon}</span>{n.label}</div>))}
+      <div style={{marginTop:'auto',paddingTop:'1rem',borderTop:'1px solid var(--border)',marginBottom:'0.5rem'}}>
+        <button className="btn" style={{width:'100%',display:'flex',alignItems:'center',gap:8,justifyContent:'center'}} onClick={()=>window.open('http://localhost:8888/mobile_qr.html','_blank')}>
+          📷 Mobile QR Scanner
+        </button>
+      </div>
       <div className="sidebar-footer">
         <strong>Darwin Mari</strong>darwin.admin · IT Admin
         <div style={{marginTop:10,display:'flex',flexDirection:'column',gap:6}}>
