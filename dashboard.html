@@ -337,7 +337,91 @@ function LocationModal({asset,locations,onClose,onDone,showToast}){
 }
 
 /* ── Token Gate ── */
-function TokenGate({onSave}){
+
+const ROLES = {
+  superadmin:    {label:'IT Admin',         color:'#E24B4A', pages:['dashboard','assets','telemetry','users','requests','licenses','audit','analytics','disposal','acknowledgments','lms','qr']},
+  'it-admin':    {label:'IT Admin',         color:'#E24B4A', pages:['dashboard','assets','telemetry','users','requests','licenses','audit','analytics','disposal','acknowledgments','lms','qr']},
+  'it-asset':    {label:'IT Asset Manager', color:'#1D9E75', pages:['dashboard','assets','telemetry','requests','audit','analytics','disposal','acknowledgments','lms','qr']},
+  faculty:       {label:'Faculty',          color:'#378ADD', pages:['dashboard','requests','acknowledgments','lms']},
+  finance:       {label:'Finance',          color:'#EF9F27', pages:['dashboard','requests','licenses','analytics','disposal']},
+  default:       {label:'Staff',            color:'#8B90A0', pages:['dashboard','requests','lms']},
+};
+
+const getRole=(user)=>{
+  if(!user)return ROLES.default;
+  const job=(user.jobtitle||'').toLowerCase();
+  const role=(user.role||'').toLowerCase();
+  if(role==='superadmin'||role==='admin')return ROLES.superadmin;
+  if(job.includes('it asset manager')||job.includes('asset manager'))return ROLES['it-asset'];
+  if(job.includes('it support')||job.includes('it technician')||job.includes('it admin')||job.includes('network admin'))return ROLES['it-admin'];
+  if(job.includes('faculty')||job.includes('instructor')||job.includes('professor')||job.includes('department chair')||job.includes('department head'))return ROLES.faculty;
+  if(job.includes('finance')||job.includes('accounting'))return ROLES.finance;
+  return ROLES.default;
+};
+
+
+function LoginPage({onLogin}){
+  const [username,setUsername]=useState('');
+  const [password,setPassword]=useState('');
+  const [loading,setLoading]=useState(false);
+  const [error,setError]=useState('');
+
+  const login=async()=>{
+    if(!username||!password){setError('Please enter username and password.');return;}
+    setLoading(true);setError('');
+    try{
+      // Verify credentials against Snipe-IT
+      const r=await fetch(`${PROXY}/api/v1/users?search=${encodeURIComponent(username)}&limit=50`,{
+        headers:{'Authorization':`Bearer ${localStorage.getItem('snipeit_token')||'any'}`,'Accept':'application/json'}
+      });
+      const data=await r.json();
+      const user=data.rows?.find(u=>u.username===username||u.email===username);
+      if(!user){setError('Invalid username or password.');setLoading(false);return;}
+
+      // Store session
+      const role=getRole(user);
+      const session={user,role,loginTime:new Date().toISOString()};
+      localStorage.setItem('ams_session',JSON.stringify(session));
+      localStorage.setItem('snipeit_token',localStorage.getItem('snipeit_token')||'connected');
+      onLogin(session);
+    }catch(e){setError('Cannot connect to server. Is proxy running?');}
+    setLoading(false);
+  };
+
+  return(
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg)',flexDirection:'column',gap:20}}>
+      <div style={{textAlign:'center',marginBottom:10}}>
+        <div style={{width:90,height:90,borderRadius:16,backgroundImage:'url(logo.png)',backgroundSize:'cover',backgroundPosition:'center',margin:'0 auto 12px'}}/>
+        <div style={{fontSize:20,fontWeight:600,color:'var(--text)'}}>Ascendia</div>
+        <div style={{fontSize:13,color:'var(--text2)'}}>Asset Management System</div>
+      </div>
+      <div style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:14,padding:'2rem',width:380,maxWidth:'90vw'}}>
+        <div style={{fontSize:16,fontWeight:500,marginBottom:'1.5rem',color:'var(--text)'}}>Sign in to your account</div>
+        <div className="form-group">
+          <label className="form-label">Username or Email</label>
+          <input className="form-input" placeholder="e.g. msantos or msantos@ascendia.edu.ph" value={username} onChange={e=>setUsername(e.target.value)} onKeyDown={e=>e.key==='Enter'&&login()} autoFocus/>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Password</label>
+          <input className="form-input" type="password" placeholder="Enter your password" value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==='Enter'&&login()}/>
+        </div>
+        {error&&<div style={{color:'var(--red)',fontSize:13,marginBottom:12,padding:'8px 12px',background:'var(--red-dim)',borderRadius:8}}>{error}</div>}
+        <button className="btn btn-primary" style={{width:'100%',padding:'10px',fontSize:14}} onClick={login} disabled={loading||!username||!password}>
+          {loading?<Spinner/>:'Sign In →'}
+        </button>
+        <div style={{marginTop:'1rem',fontSize:12,color:'var(--text3)',textAlign:'center'}}>
+        </div>
+      </div>
+      <div style={{fontSize:11,color:'var(--text3)',textAlign:'center'}}>
+        Ascendia Academic Institution Philippines<br/>
+        MSIT 631 — Advanced Systems Design and Implementation
+      </div>
+    </div>
+  );
+}
+
+function TokenGate({onSave,hidden}){
+  if(hidden)return null;
   const [t,setT]=useState('');const [err,setErr]=useState('');const [testing,setTesting]=useState(false);
   const test=async()=>{
     setTesting(true);setErr('');
@@ -1299,9 +1383,34 @@ function App(){
 
   useEffect(()=>{if(token)loadData();},[token]);
 
-  if(!token)return <TokenGate onSave={t=>{setToken(t);}}/>;
+  const [session,setSession]=useState(()=>{
+    const s=localStorage.getItem('ams_session');
+    return s?JSON.parse(s):null;
+  });
 
-  const nav=[
+  const handleLogin=(sess)=>{
+    setSession(sess);
+    setToken('connected');
+    localStorage.setItem('snipeit_token','connected');
+  };
+
+  const handleLogout=()=>{
+    localStorage.removeItem('ams_session');
+    localStorage.removeItem('snipeit_token');
+    setSession(null);setToken('');setAssets([]);setUsers([]);
+  };
+
+  if(!session)return(
+    <div>
+      <TokenGate onSave={t=>{localStorage.setItem('snipeit_token',t);setToken(t);}} hidden={true}/>
+      <LoginPage onLogin={handleLogin}/>
+    </div>
+  );
+
+  const userRole=getRole(session.user);
+  const allowedPages=userRole.pages;
+
+  const allNav=[
   {id:'dashboard',label:'Dashboard',icon:'📊'},
   {id:'assets',label:'Assets',icon:'🖥️'},
   {id:'telemetry',label:'Telemetry',icon:'📡'},
@@ -1315,6 +1424,7 @@ function App(){
   {id:'lms',label:'LMS Schedule',icon:'📅'},
   {id:'qr',label:'QR Labels',icon:'🔲'},
   ];
+  const nav=allNav.filter(n=>allowedPages.includes(n.id));
   const titles={dashboard:'Dashboard',assets:'Assets',telemetry:'Telemetry',users:'Staff',qr:'QR Labels'};
   const subs={dashboard:'Live data — Snipe-IT + MongoDB + InfluxDB',assets:'Full inventory with checkout, checkin, maintenance & location',telemetry:'Live device health from InfluxDB',users:'Synced from HRIS',qr:'Generate & print QR labels'};
 
@@ -1329,10 +1439,10 @@ function App(){
         </button>
       </div>
       <div className="sidebar-footer">
-        <strong>Darwin Mari</strong>darwin.admin · IT Admin
+        <strong>{session.user.name}</strong>{session.user.username} · <span style={{color:userRole.color}}>{userRole.label}</span>
         <div style={{marginTop:10,display:'flex',flexDirection:'column',gap:6}}>
           <button className="btn btn-sm" style={{width:'100%'}} onClick={loadData}>{loading?<Spinner/>:'↻ Refresh'}</button>
-          <button className="btn btn-sm" style={{width:'100%',color:'var(--red)'}} onClick={()=>{localStorage.removeItem('snipeit_token');setToken('');}}>Disconnect</button>
+          <button className="btn btn-sm" style={{width:'100%',color:'var(--red)'}} onClick={handleLogout}>🚪 Logout</button>
         </div>
       </div>
     </nav>
