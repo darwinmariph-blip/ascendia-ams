@@ -5,8 +5,8 @@
 ============================================================
 
 READ THIS FIRST:
-Follow ALL steps in order. Install everything in PART A 
-first before downloading the project in PART B.
+Follow ALL steps in order. Install everything in PART A
+first, then download and extract the project in PART B.
 
 Estimated time: 45-60 minutes (first time only)
 
@@ -29,7 +29,7 @@ Paste this in Terminal and press Enter:
 - Press Enter to continue when prompted
 - Wait 5-10 minutes
 
-After install, run:
+After install, run these 2 commands:
    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zshrc
    source ~/.zshrc
 
@@ -57,7 +57,10 @@ A3 — INSTALL COMPOSER
    curl -sS https://getcomposer.org/installer | php
    sudo mv composer.phar /usr/local/bin/composer
 
+Enter your Mac password when asked.
+
 Verify: composer --version
+Expected: Composer version 2.x.x
 
 
 ------------------------------------------------------------
@@ -72,11 +75,14 @@ A4 — INSTALL LARAVEL VALET
 Enter your Mac password when asked.
 
 Verify: valet --version
+Expected: Laravel Valet 4.x.x
 
 
 ------------------------------------------------------------
-A5 — INSTALL DATABASES
+A5 — INSTALL ALL DATABASES
 ------------------------------------------------------------
+
+Run each command one at a time:
 
    brew install mysql
    brew install mongodb-community
@@ -84,23 +90,31 @@ A5 — INSTALL DATABASES
    brew install redis
 
 Start all databases:
+
    brew services start mysql
    brew services start mongodb-community
    brew services start influxdb
    brew services start redis
 
-Verify: brew services list
-All 4 must show "started"
+Verify all running:
+   brew services list
+
+You must see these 4 with "started" status:
+   mysql              started
+   mongodb-community  started
+   influxdb           started
+   redis              started
 
 
 ------------------------------------------------------------
 A6 — INSTALL PYTHON 3.11+
 ------------------------------------------------------------
 
-Download: https://www.python.org/downloads/macos/
-Run the installer.
+Download from: https://www.python.org/downloads/macos/
+Click "Download Python 3.11.x" and run the installer.
 
-OR run: brew install python@3.11
+OR run in Terminal:
+   brew install python@3.11
 
 Verify: python3 --version
 Expected: Python 3.11.x
@@ -112,10 +126,14 @@ A7 — INSTALL PYTHON PACKAGES
 
    pip3 install python-dotenv requests pymongo influxdb3-python redis networkx fastapi uvicorn
 
+Wait for: "Successfully installed..."
+
 
 ------------------------------------------------------------
 A8 — INSTALL SNIPE-IT
 ------------------------------------------------------------
+
+Run these one by one:
 
    mkdir -p ~/Sites
    cd ~/Sites
@@ -125,10 +143,10 @@ A8 — INSTALL SNIPE-IT
    cp .env.example .env
    php artisan key:generate
 
-Edit Snipe-IT .env:
+Edit Snipe-IT .env file:
    nano .env
 
-Change ONLY these lines:
+Use arrow keys to find and change ONLY these lines:
    APP_URL=http://snipe-it.test
    DB_CONNECTION=mysql
    DB_HOST=127.0.0.1
@@ -136,9 +154,9 @@ Change ONLY these lines:
    DB_USERNAME=root
    DB_PASSWORD=
 
-Save: Control+X then Y then Enter
+Save: Press Control+X then Y then Enter
 
-Create database:
+Create the database:
    mysql -u root -e "CREATE DATABASE snipeit;"
    php artisan migrate --seed
 
@@ -158,11 +176,11 @@ A9 — COMPLETE SNIPE-IT SETUP IN BROWSER
 2. Follow Pre-Flight Check → click Next
 3. Click "Initialize Database"
 4. Create admin account:
-   First Name:  Darwin
-   Last Name:   Mari
-   Email:       admin@ascendia.edu.ph
-   Password:    Ascendia@2026!
-   Site Name:   Ascendia AMS
+      First Name:  Darwin
+      Last Name:   Mari
+      Email:       admin@ascendia.edu.ph
+      Password:    Ascendia@2026!
+      Site Name:   Ascendia AMS
 5. Complete setup and login
 
 
@@ -171,15 +189,16 @@ A10 — GET SNIPE-IT API TOKEN
 ------------------------------------------------------------
 
 1. Login to http://snipe-it.test
-2. Click your name (top right)
+2. Click your name (top right corner)
 3. Click "Manage API Keys"
 4. Click "+ Create New Token"
 5. Name: ascendia-ams
-6. COPY THE TOKEN — save it in Notes!
+6. COPY THE TOKEN — paste it in Notes app and save!
+   You will need this in Step B3.
 
 
 ============================================================
-PART B — DOWNLOAD THE PROJECT
+PART B — DOWNLOAD AND EXTRACT THE PROJECT
 ============================================================
 
 ------------------------------------------------------------
@@ -188,26 +207,38 @@ B1 — DOWNLOAD FROM GOOGLE DRIVE
 
 1. Open your browser
 2. Go to this link:
+
    https://drive.google.com/file/d/1Og7GdmO12HSLsnZgtPOfxWgF7C1FJEmu/view?usp=sharing
 
-3. Click the Download button (down arrow icon)
-   OR click File → Download
+3. Click the Download button (down arrow icon at top right)
+   OR click the 3-dot menu → Download
 
 4. Wait for the download to complete
-   File name: ascendia-ams.zip (or similar)
-
-5. Open Finder → Go to Downloads folder
-6. Double-click the downloaded zip file to extract it
-7. You should see a folder named: ascendia-ams
-
-8. Move the folder to your Desktop:
-   - Right-click the ascendia-ams folder
-   - Click "Move to Desktop"
-   OR drag it to your Desktop
+   The file is a ZIP file (ascendia-ams.zip or similar)
 
 
 ------------------------------------------------------------
-B2 — CONFIGURE THE PROJECT .env FILE
+B2 — EXTRACT THE ZIP FILE
+------------------------------------------------------------
+
+1. Open Finder
+2. Go to your Downloads folder
+3. Find the downloaded ZIP file (ascendia-ams.zip)
+4. Double-click the ZIP file to extract it
+   Mac will automatically extract it in the same folder
+
+5. You should now see a folder named: ascendia-ams
+
+6. Move the folder to your Desktop:
+   - Click and drag the ascendia-ams folder to your Desktop
+   OR
+   - Right-click the folder → Move to → Desktop
+
+Make sure the folder is on your Desktop and named: ascendia-ams
+
+
+------------------------------------------------------------
+B3 — CONFIGURE THE PROJECT .env FILE
 ------------------------------------------------------------
 
 1. Open Terminal
@@ -215,108 +246,123 @@ B2 — CONFIGURE THE PROJECT .env FILE
    cd ~/Desktop/ascendia-ams
    nano .env
 
-3. Update these 2 lines:
+3. Find and update ONLY these 2 lines:
+
    SNIPEIT_URL=http://snipe-it.test
    SNIPEIT_TOKEN=PASTE_YOUR_TOKEN_HERE
 
-   Replace PASTE_YOUR_TOKEN_HERE with the token from A10
+   Replace PASTE_YOUR_TOKEN_HERE with the token from Step A10
 
-4. Save: Control+X then Y then Enter
+4. Save: Press Control+X then Y then Enter
 
-5. Verify:
+5. Verify it saved correctly:
    cat .env | grep SNIPEIT_TOKEN
-   Should show your token
+   Should show your token after the = sign
 
 
 ------------------------------------------------------------
-B3 — IMPORT THE DATABASES
+B4 — IMPORT THE DATABASES
 ------------------------------------------------------------
 
-1. In Terminal:
+1. In Terminal, go to the backups folder:
    cd ~/Desktop/ascendia-ams/backups
 
-2. List backup folders:
+2. List the backup folders:
    ls -la
 
-3. Go to latest backup:
+3. Go into the latest backup folder:
    cd LATEST_BACKUP_FOLDER_NAME
-   (Use the folder name you see)
+   (Replace with the actual folder name you see listed)
 
-4. Import MySQL:
+4. Import MySQL database:
    mysql -u root snipeit < mysql_snipeit.sql
+   Expected: No error messages
 
-5. Import MongoDB:
+5. Import MongoDB database:
    mongorestore mongodb/
+   Expected: "done" messages for each collection
+
+6. Verify MySQL imported:
+   mysql -u root snipeit -e "SELECT COUNT(*) FROM assets;"
+   Expected: Shows 67 or more
 
 
 ============================================================
 PART C — START THE SYSTEM
 ============================================================
 
-Open 3 Terminal tabs (Command+T for new tab):
+Open 3 separate Terminal windows (Command+T for new tab):
 
-TAB 1:
-   cd ~/Desktop/ascendia-ams && ./start.sh
+TERMINAL 1 — Start all services:
+   cd ~/Desktop/ascendia-ams
+   ./start.sh
    Wait for: "ALL SERVICES STARTED"
 
-TAB 2:
-   cd ~/Desktop/ascendia-ams && python3 proxy.py
+TERMINAL 2 — Start proxy:
+   cd ~/Desktop/ascendia-ams
+   python3 proxy.py
    Wait for: "Proxy running at http://localhost:8888"
-   !! KEEP THIS OPEN !!
+   !! KEEP THIS TERMINAL OPEN — DO NOT CLOSE !!
 
-TAB 3:
-   cd ~/Desktop/ascendia-ams && python3 fastapi_service.py
+TERMINAL 3 — Start FastAPI (for LMS Schedule):
+   cd ~/Desktop/ascendia-ams
+   python3 fastapi_service.py
    Wait for: "Uvicorn running on http://0.0.0.0:8080"
-   !! KEEP THIS OPEN !!
+   !! KEEP THIS TERMINAL OPEN — DO NOT CLOSE !!
 
 
 ============================================================
 PART D — LOGIN TO THE DASHBOARD
 ============================================================
 
-1. Open browser
+1. Open your browser (Chrome or Firefox recommended)
 2. Go to: http://localhost:8888/dashboard.html
-3. Enter your credentials:
-   Username: darwin.admin  (or groupmate.admin)
-   Password: Ascendia@2026!
-4. Click "Sign In →"
+3. You will see the Ascendia AMS login page
+4. Enter your credentials:
+      Username: groupmate.admin
+      Password: Ascendia@2026!
+5. Click "Sign In →"
 
-You should see the full Ascendia AMS dashboard!
+You should see the full Ascendia AMS dashboard with:
+   - 67 assets across 11 categories
+   - 16 staff members
+   - All 12 pages accessible
+   - Live telemetry data
 
 
 ============================================================
-DAILY STARTUP (After every Mac restart)
+DAILY STARTUP (Every time you restart your Mac)
 ============================================================
 
-TAB 1:   cd ~/Desktop/ascendia-ams && ./start.sh
-TAB 2:   cd ~/Desktop/ascendia-ams && python3 proxy.py
-TAB 3:   cd ~/Desktop/ascendia-ams && python3 fastapi_service.py
+TERMINAL 1:   cd ~/Desktop/ascendia-ams && ./start.sh
+TERMINAL 2:   cd ~/Desktop/ascendia-ams && python3 proxy.py
+TERMINAL 3:   cd ~/Desktop/ascendia-ams && python3 fastapi_service.py
 
-Open:    http://localhost:8888/dashboard.html
-Login:   darwin.admin / Ascendia@2026!
+Browser:      http://localhost:8888/dashboard.html
+Login:        groupmate.admin / Ascendia@2026!
 
 
 ============================================================
 LOGIN CREDENTIALS
 ============================================================
 
-Username         Password           Role
+Username          Password          Role          Pages
 ------------------------------------------------------------
-darwin.admin     Ascendia@2026!     IT Admin (All pages)
-groupmate.admin  Ascendia@2026!     IT Admin (All pages)
-rgarcia          Ascendia@2026!     IT Asset Manager
-msantos          Ascendia@2026!     Faculty
-jdelacruz        Ascendia@2026!     Finance
-plim             Ascendia@2026!     Staff
+groupmate.admin   Ascendia@2026!    IT Admin      All 12 pages
+darwin.admin      Ascendia@2026!    IT Admin      All 12 pages
+rgarcia           Ascendia@2026!    IT Asset Mgr  10 pages
+msantos           Ascendia@2026!    Faculty       4 pages
+jdelacruz         Ascendia@2026!    Finance       5 pages
+plim              Ascendia@2026!    Staff         3 pages
 
-See Ascendia_AMS_Credentials.docx for full list.
+See Ascendia_AMS_Credentials.docx for complete list.
 
 
 ============================================================
 TROUBLESHOOTING
 ============================================================
 
-"Cannot reach Snipe-IT":
+"Cannot reach Snipe-IT" on dashboard:
    valet start
    lsof -ti:8888 | xargs kill -9
    python3 proxy.py
@@ -327,20 +373,26 @@ Database not running:
    brew services restart influxdb
    brew services restart redis
 
-Port 8888 in use:
+Port 8888 already in use:
    lsof -ti:8888 | xargs kill -9
    python3 proxy.py
 
 Login not working:
-   Make sure proxy.py is running in Terminal
-   Clear browser cache: Command+Shift+R
+   - Make sure proxy.py is running in Terminal
+   - Hard refresh browser: Command+Shift+R
+   - Clear browser: Command+Option+J → type: localStorage.clear()
 
 Snipe-IT not loading:
    cd ~/Sites/snipe-it && valet start
+
+composer or valet not found:
+   export PATH="$HOME/.composer/vendor/bin:$PATH"
+   source ~/.zshrc
 
 
 ============================================================
   Ascendia Academic Institution Philippines
   Group 1 — MSIT 631 Advanced Systems Design
   GitHub: https://github.com/darwinmariph-blip/ascendia-ams
+  Google Drive: https://drive.google.com/file/d/1Og7GdmO12HSLsnZgtPOfxWgF7C1FJEmu/view?usp=sharing
 ============================================================

@@ -5,8 +5,8 @@
 ============================================================
 
 READ THIS FIRST:
-Follow ALL steps in order. Install everything in PART A 
-first before downloading the project in PART B.
+Follow ALL steps in order. Install everything in PART A
+first, then download and extract the project in PART B.
 
 Estimated time: 45-60 minutes (first time only)
 
@@ -18,32 +18,19 @@ Use Command Prompt for all commands.
 Press Windows+R, type "cmd", press Enter.
 
 ------------------------------------------------------------
-A1 — INSTALL GIT FOR WINDOWS
+A1 — INSTALL PYTHON 3.11+
 ------------------------------------------------------------
 
-1. Download: https://git-scm.com/download/win
-2. Run the installer
-3. Keep ALL default settings
-4. Click Install → Finish
-
-Verify (open NEW Command Prompt):
-   git --version
-   Expected: git version 2.x.x.windows.x
-
-
-------------------------------------------------------------
-A2 — INSTALL PYTHON 3.11+
-------------------------------------------------------------
-
-1. Download: https://www.python.org/downloads/windows/
+1. Download from: https://www.python.org/downloads/windows/
 2. Click "Download Python 3.11.x"
-3. Run installer
-4. !! CRITICAL !! CHECK THESE ON FIRST SCREEN:
+3. Run the installer
+4. !! CRITICAL — CHECK THESE BOXES ON THE FIRST SCREEN !!
       [x] Add Python to PATH
       [x] Add Python to environment variables
 5. Click "Install Now"
-6. Click "Disable path length limit" if shown
-7. Click Close
+6. Wait for installation to complete
+7. If shown, click "Disable path length limit"
+8. Click "Close"
 
 Verify (open NEW Command Prompt):
    python --version
@@ -52,30 +39,35 @@ Verify (open NEW Command Prompt):
    pip --version
    Expected: pip 23.x.x
 
-If not found: restart computer and try again.
+If python is not found: restart computer and try again.
 
 
 ------------------------------------------------------------
-A3 — INSTALL DOCKER DESKTOP
+A2 — INSTALL DOCKER DESKTOP
 ------------------------------------------------------------
 
-1. Download: https://www.docker.com/products/docker-desktop/
+1. Download from: https://www.docker.com/products/docker-desktop/
 2. Click "Download for Windows"
-   - Intel/AMD processor: choose AMD64
-   - ARM processor: choose ARM64
-   - Not sure? Choose AMD64
+   - Intel or AMD processor: download AMD64
+   - ARM processor: download ARM64
+   - Not sure? Download AMD64 (most common)
 
 3. Run Docker Desktop Installer.exe
-4. Keep all default settings → OK
-5. Restart computer when prompted
-6. After restart, Docker Desktop opens automatically
-7. On setup screen:
+4. Keep all default settings
+5. Click OK to install
+6. Click "Close and restart" when prompted
+7. After restart, Docker Desktop opens automatically
+
+8. On setup screen:
    - Select "Use recommended settings"
    - Click Finish
-8. On sign in screen:
+
+9. On sign in screen:
    - Click "Continue without signing in"
-9. Wait until you see: "Docker Desktop is running"
-   (Whale icon appears in bottom right taskbar)
+
+10. Wait until Docker Desktop shows:
+    "Docker Desktop is running"
+    (Whale icon appears in bottom right taskbar)
 
 Verify (open Command Prompt):
    docker --version
@@ -88,7 +80,7 @@ Verify (open Command Prompt):
 
 
 ------------------------------------------------------------
-A4 — INSTALL PYTHON PACKAGES
+A3 — INSTALL PYTHON PACKAGES
 ------------------------------------------------------------
 
 Open Command Prompt and run:
@@ -99,7 +91,7 @@ Wait for: "Successfully installed..."
 
 
 ------------------------------------------------------------
-A5 — INSTALL AND SETUP SNIPE-IT USING DOCKER
+A4 — INSTALL AND SETUP SNIPE-IT USING DOCKER
 ------------------------------------------------------------
 
 1. Make sure Docker Desktop is running (whale icon in taskbar)
@@ -110,7 +102,7 @@ A5 — INSTALL AND SETUP SNIPE-IT USING DOCKER
    mkdir %USERPROFILE%\snipeit-temp
    cd %USERPROFILE%\snipeit-temp
 
-4. Create docker-compose file:
+4. Create a docker-compose file:
    notepad docker-compose.yml
 
 5. Paste EXACTLY this into Notepad:
@@ -142,50 +134,51 @@ services:
     ports:
       - "8090:80"
 
-6. Save: Ctrl+S → Close Notepad
+6. Save: Press Ctrl+S then close Notepad
 
 7. Start Snipe-IT:
    docker compose up -d
 
-8. Wait 2-3 minutes
+8. Wait 2-3 minutes for Snipe-IT to start
 
-9. Open browser → http://localhost:8090
+9. Open browser and go to: http://localhost:8090
 
 
 ------------------------------------------------------------
-A6 — COMPLETE SNIPE-IT SETUP IN BROWSER
+A5 — COMPLETE SNIPE-IT SETUP IN BROWSER
 ------------------------------------------------------------
 
 1. Go to: http://localhost:8090
 2. Follow Pre-Flight Check → click Next
 3. Click "Initialize Database"
 4. Create admin account:
-   First Name:  Darwin
-   Last Name:   Mari
-   Email:       admin@ascendia.edu.ph
-   Password:    Ascendia@2026!
-   Site Name:   Ascendia AMS
+      First Name:  Darwin
+      Last Name:   Mari
+      Email:       admin@ascendia.edu.ph
+      Password:    Ascendia@2026!
+      Site Name:   Ascendia AMS
 5. Complete setup and login
 
 
 ------------------------------------------------------------
-A7 — GET SNIPE-IT API TOKEN
+A6 — GET SNIPE-IT API TOKEN
 ------------------------------------------------------------
 
 1. Login to http://localhost:8090
-2. Click your name (top right)
+2. Click your name (top right corner)
 3. Click "Manage API Keys"
 4. Click "+ Create New Token"
 5. Name: ascendia-ams
-6. COPY THE TOKEN — paste in Notepad and save!
+6. COPY THE TOKEN — paste it in Notepad and save!
+   You will need this in Step B3.
 
-7. Stop temporary Snipe-IT:
+7. Stop the temporary Snipe-IT:
    cd %USERPROFILE%\snipeit-temp
    docker compose down
 
 
 ============================================================
-PART B — DOWNLOAD THE PROJECT
+PART B — DOWNLOAD AND EXTRACT THE PROJECT
 ============================================================
 
 ------------------------------------------------------------
@@ -194,75 +187,98 @@ B1 — DOWNLOAD FROM GOOGLE DRIVE
 
 1. Open your browser (Chrome or Edge)
 2. Go to this link:
+
    https://drive.google.com/file/d/1Og7GdmO12HSLsnZgtPOfxWgF7C1FJEmu/view?usp=sharing
 
 3. Click the Download button (down arrow icon at top right)
-   OR click the 3-dot menu → Download
+   OR click the 3-dot menu (⋮) → Download
 
 4. If Google shows "Can't scan for viruses" warning:
    Click "Download anyway"
 
 5. Wait for download to complete
-   File name: ascendia-ams.zip (or similar)
-
-6. Open File Explorer → Downloads folder
-7. Right-click the downloaded zip file
-8. Click "Extract All"
-9. Set destination to your Desktop
-10. Click "Extract"
-
-You should now have a folder on your Desktop named: ascendia-ams
+   The file is a ZIP file (ascendia-ams.zip or similar)
 
 
 ------------------------------------------------------------
-B2 — SHOW HIDDEN FILES
+B2 — EXTRACT THE ZIP FILE
 ------------------------------------------------------------
 
-The .env file is hidden by default:
-1. Open File Explorer
-2. Click "View" in top menu
+1. Open File Explorer (press Windows+E)
+2. Go to your Downloads folder
+3. Find the downloaded ZIP file (ascendia-ams.zip)
+4. Right-click the ZIP file
+5. Click "Extract All"
+6. Change the destination to your Desktop:
+   - Click "Browse"
+   - Click "Desktop"
+   - Click "Select Folder"
+7. Click "Extract"
+8. Wait for extraction to complete
+
+You should now see a folder on your Desktop named: ascendia-ams
+
+
+------------------------------------------------------------
+B3 — SHOW HIDDEN FILES
+------------------------------------------------------------
+
+The .env file is hidden by default on Windows:
+
+1. Open File Explorer (Windows+E)
+2. Click "View" in the top menu
 3. Click "Show"
-4. Check "Hidden items"
+4. Click "Hidden items" to check it
 
 Now you can see .env inside the ascendia-ams folder.
 
 
 ------------------------------------------------------------
-B3 — CONFIGURE THE PROJECT .env FILE
+B4 — CONFIGURE THE PROJECT .env FILE
 ------------------------------------------------------------
 
-1. Go to Desktop → ascendia-ams folder
-2. Right-click .env → Open with → Notepad
+1. Go to Desktop → open the ascendia-ams folder
+2. Find the file named ".env"
+3. Right-click on .env
+4. Click "Open with" → "Notepad"
 
-3. Find and update these lines:
+5. Find and update ONLY these 2 lines:
+
    SNIPEIT_URL=http://localhost:8090
    SNIPEIT_TOKEN=PASTE_YOUR_TOKEN_HERE
 
-   Replace PASTE_YOUR_TOKEN_HERE with token from A7
+   Replace PASTE_YOUR_TOKEN_HERE with the token from Step A6
 
-4. Press Ctrl+S to save → Close Notepad
+6. Press Ctrl+S to save
+7. Close Notepad
 
 
 ------------------------------------------------------------
-B4 — IMPORT THE DATABASES
+B5 — IMPORT THE DATABASES
 ------------------------------------------------------------
 
-1. Open Command Prompt
-2. Go to backups folder:
+1. Make sure Docker Desktop is running
+
+2. Open Command Prompt
+
+3. Go to the backups folder:
    cd %USERPROFILE%\Desktop\ascendia-ams\backups
 
-3. List backup folders:
+4. List backup folders:
    dir
 
-4. Go to latest backup:
+5. Go into the latest backup folder:
    cd LATEST_BACKUP_FOLDER_NAME
+   (Replace with the actual folder name you see)
 
-5. Import MySQL:
+6. Import MySQL:
    docker exec -i ascendia_mysql mysql -u snipeit -psnipeit_password snipeit < mysql_snipeit.sql
 
-6. Import MongoDB:
+7. Import MongoDB:
    docker cp mongodb ascendia_mongodb:/backup
    docker exec ascendia_mongodb mongorestore /backup/mongodb/
+
+You should see success messages for each step.
 
 
 ============================================================
@@ -273,9 +289,12 @@ PART C — START ALL SERVICES
 C1 — MAKE SURE DOCKER DESKTOP IS RUNNING
 ------------------------------------------------------------
 
-Look for whale icon in bottom right taskbar.
-If not running: open Docker Desktop from Start Menu.
-Wait until: "Docker Desktop is running"
+Look for the whale icon in the bottom right taskbar.
+If not running:
+   - Open Start Menu
+   - Search "Docker Desktop"
+   - Open it
+   - Wait until: "Docker Desktop is running"
 
 
 ------------------------------------------------------------
@@ -287,7 +306,7 @@ Open Command Prompt:
    cd %USERPROFILE%\Desktop\ascendia-ams
    docker compose up -d
 
-Wait for all 6 containers to start:
+Wait 2-3 minutes. You should see:
    Container ascendia_mongodb   Started
    Container ascendia_mysql     Started
    Container ascendia_influxdb  Started
@@ -295,54 +314,60 @@ Wait for all 6 containers to start:
    Container ascendia_api       Started
    Container ascendia_snipeit   Started
 
-Verify: docker ps (should show 6 containers)
+Verify: docker ps
+You should see 6 containers listed.
 
 
 ------------------------------------------------------------
 C3 — START THE PROXY
 ------------------------------------------------------------
 
-Open NEW Command Prompt:
+Open a NEW Command Prompt window:
 
    cd %USERPROFILE%\Desktop\ascendia-ams
    python proxy.py
 
 Wait for: "Proxy running at http://localhost:8888"
-!! KEEP THIS WINDOW OPEN !!
+!! KEEP THIS WINDOW OPEN — DO NOT CLOSE !!
 
 
 ------------------------------------------------------------
-C4 — START FASTAPI (For LMS Schedule)
+C4 — START FASTAPI (For LMS Schedule page)
 ------------------------------------------------------------
 
-Open ANOTHER NEW Command Prompt:
+Open ANOTHER NEW Command Prompt window:
 
    cd %USERPROFILE%\Desktop\ascendia-ams
    python fastapi_service.py
 
 Wait for: "Uvicorn running on http://0.0.0.0:8080"
-!! KEEP THIS WINDOW OPEN !!
+!! KEEP THIS WINDOW OPEN — DO NOT CLOSE !!
 
 
 ============================================================
 PART D — LOGIN TO THE DASHBOARD
 ============================================================
 
-1. Open browser (Chrome or Firefox recommended)
+1. Open your browser (Chrome or Firefox recommended)
 2. Go to: http://localhost:8888/dashboard.html
-3. Enter your credentials:
-   Username: darwin.admin  (or groupmate.admin)
-   Password: Ascendia@2026!
-4. Click "Sign In →"
+3. You will see the Ascendia AMS login page
+4. Enter your credentials:
+      Username: groupmate.admin
+      Password: Ascendia@2026!
+5. Click "Sign In →"
 
-You should see the full Ascendia AMS dashboard!
+You should see the full Ascendia AMS dashboard with:
+   - 67 assets across 11 categories
+   - 16 staff members
+   - All 12 pages accessible
+   - Live telemetry data
 
 
 ============================================================
-DAILY STARTUP (After every Windows restart)
+DAILY STARTUP (Every time you restart Windows)
 ============================================================
 
-Step 1: Open Docker Desktop, wait for whale icon
+Step 1: Open Docker Desktop — wait for whale icon
 
 Step 2: Command Prompt 1 — Start containers:
    cd %USERPROFILE%\Desktop\ascendia-ams
@@ -367,25 +392,26 @@ STOP EVERYTHING WHEN DONE
 ============================================================
 
 1. Close all Command Prompt windows
-2. Stop Docker:
+2. Stop Docker containers:
+   cd %USERPROFILE%\Desktop\ascendia-ams
    docker compose down
-3. Right-click whale icon → Quit Docker Desktop
+3. Right-click whale icon in taskbar → Quit Docker Desktop
 
 
 ============================================================
 LOGIN CREDENTIALS
 ============================================================
 
-Username         Password           Role
+Username          Password          Role          Pages
 ------------------------------------------------------------
-darwin.admin     Ascendia@2026!     IT Admin (All pages)
-groupmate.admin  Ascendia@2026!     IT Admin (All pages)
-rgarcia          Ascendia@2026!     IT Asset Manager
-msantos          Ascendia@2026!     Faculty
-jdelacruz        Ascendia@2026!     Finance
-plim             Ascendia@2026!     Staff
+groupmate.admin   Ascendia@2026!    IT Admin      All 12 pages
+darwin.admin      Ascendia@2026!    IT Admin      All 12 pages
+rgarcia           Ascendia@2026!    IT Asset Mgr  10 pages
+msantos           Ascendia@2026!    Faculty       4 pages
+jdelacruz         Ascendia@2026!    Finance       5 pages
+plim              Ascendia@2026!    Staff         3 pages
 
-See Ascendia_AMS_Credentials.docx for full list.
+See Ascendia_AMS_Credentials.docx for complete list.
 
 
 ============================================================
@@ -398,18 +424,18 @@ Docker not starting:
    - Restart computer if needed
 
 Dashboard "Cannot reach Snipe-IT":
-   1. Check proxy Command Prompt is open
+   1. Check proxy Command Prompt is still open
    2. Run: docker ps (should show 6 containers)
    3. Hard refresh: Ctrl+Shift+R
 
 Login not working:
    - Make sure proxy.py is running
-   - Check: docker ps shows all 6 containers
+   - Check: docker ps shows 6 containers
    - Clear browser: Ctrl+Shift+R
 
-Port 8888 in use:
+Port 8888 already in use:
    netstat -ano | findstr :8888
-   taskkill /PID <number> /F
+   taskkill /PID <number_shown> /F
    python proxy.py
 
 Python not found:
@@ -419,6 +445,10 @@ Python not found:
 Docker containers failing:
    docker compose down
    docker compose up -d
+
+Snipe-IT shows error:
+   - Wait 3 more minutes and refresh
+   - Check: docker logs ascendia_snipeit --tail 20
 
 
 ============================================================
