@@ -19,7 +19,6 @@
 |---|---|
 | **Dashboard** | https://ascendia.mari-dev.tech/dashboard.html |
 | **Mobile QR Scanner** | https://ascendia.mari-dev.tech/mobile_qr.html |
-| **Health Check** | https://ascendia.mari-dev.tech/health |
 
 **The original IP‑based URLs below still work** (HTTP only), but the new domain provides **HTTPS** so the camera works on mobile devices.
 
